@@ -283,7 +283,9 @@ struct Scanner: NSViewRepresentable {
     func apply(_ c: Coordinator) {
         guard !loopsPaused(), c.hot != hot || c.first else { return }
         c.first = false; c.hot = hot
-        let positions = (0..<n).map { CGFloat($0) * step } + (1..<(n - 1)).reversed().map { CGFloat($0) * step }
+        let forward: [CGFloat] = (0..<n).map { CGFloat($0) * step }
+        let back: [CGFloat] = (1..<(n - 1)).reversed().map { CGFloat($0) * step }
+        let positions: [CGFloat] = forward + back
         let beat = hot ? 0.07 : 0.16
         for l in c.layers {
             let lag = l.value(forKey: "lag") as? Int ?? 0

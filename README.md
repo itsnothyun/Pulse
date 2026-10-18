@@ -37,6 +37,11 @@ Subtle loops (a header scanner, a breathing *live* pixel, a slow CRT sweep) run 
 compositor, so the widget idles at a few percent CPU. They switch off when the OS asks
 for reduced motion.
 
+<details>
+<summary>Windows screenshot</summary>
+<p align="center"><img src="docs/pulse-windows.png" width="320" alt="Pulse on Windows"></p>
+</details>
+
 ## Install
 
 Grab the latest build from **[Releases](../../releases)**.
