@@ -1,0 +1,76 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Publish single-file exe
+        run: >
+          dotnet publish windows/Pulse/Pulse.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -o out
+      - name: Render snapshots (proves the UI draws on Windows)
+        shell: pwsh
+        run: |
+          $p = Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows.png' -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or -not (Test-Path snapshot-windows.png)) { throw "snapshot failed" }
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-demo.png','--demo' -Wait
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-compact.png','--demo','--compact' -Wait
+          Compress-Archive -Path out/Pulse.exe -DestinationPath Pulse-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pulse-windows-x64
+          path: Pulse-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-windows
+          path: snapshot-windows*.png
+
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build universal app
+        run: UNIVERSAL=1 APP=$PWD/dist/Pulse.app VERSION=${GITHUB_REF_NAME#v} ./macos/build.sh
+      - name: Render snapshot
+        run: dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos.png --demo
+      - name: Zip
+        run: ditto -c -k --keepParent dist/Pulse.app Pulse-macos-universal.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pulse-macos-universal
+          path: Pulse-macos-universal.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-macos
+          path: snapshot-macos.png
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Pulse-*
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Pulse-windows-x64.zip
+            Pulse-macos-universal.zip
+          generate_release_notes: true

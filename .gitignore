@@ -1,0 +1,14 @@
+# .NET
+bin/
+obj/
+out/
+*.user
+.vs/
+
+# macOS
+.DS_Store
+dist/
+*.app
+
+# local snapshots
+snapshot-*.png

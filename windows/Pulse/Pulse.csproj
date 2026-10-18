@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Pulse</AssemblyName>
+    <RootNamespace>PulseApp</RootNamespace>
+    <StartupObject>PulseApp.Program</StartupObject>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>pulse.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>Pulse</Product>
+    <Description>Monochrome pixel system monitor widget</Description>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- lets the project compile on macOS/Linux too (it only runs on Windows) -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.1" />
+  </ItemGroup>
+
+</Project>
