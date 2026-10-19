@@ -661,7 +661,7 @@ async function setupStars() {
   const els = document.querySelectorAll('[data-stars]');
   if (!els.length) return;
   try {
-    const r = await fetch('https://api.github.com/repos/itsnothyun/pulse', { headers: { Accept: 'application/vnd.github+json' } });
+    const r = await fetch('https://api.github.com/repos/itsnothyun/Pulse', { headers: { Accept: 'application/vnd.github+json' } });
     if (!r.ok) return;
     const n = (await r.json()).stargazers_count;
     if (typeof n !== 'number') return;
