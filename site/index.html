@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pulse — your machine's vitals, in pixels</title>
+  <meta name="description" content="Pulse is a tiny monochrome pixel widget for macOS and Windows: CPU, memory, temperature and disk at a glance, plus the Claude Code tokens you spent this week. Free and open source.">
+  <meta name="theme-color" content="#090909">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pulse — your machine's vitals, in pixels">
+  <meta property="og:description" content="A tiny monochrome widget for macOS and Windows, with a weekly tally of your Claude Code tokens. Free and open source.">
+  <meta property="og:image" content="img/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="fonts/SchibstedGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="pulse.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="Pulse home">
+        <img src="img/icon.png" width="28" height="28" alt="">
+        <span class="px px-brand" data-pixel="PULSE" aria-hidden="true"></span>
+      </a>
+      <nav aria-label="Sections">
+        <ul class="nav-links">
+          <li><a href="#vitals">Vitals</a></li>
+          <li><a href="#sizes">Sizes</a></li>
+          <li><a href="#claude">Claude Code</a></li>
+          <li><a href="#install">Install</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn-star btn-small" href="https://github.com/itsnothyun/pulse">
+        <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z"/></svg>
+        <span>Star</span>
+        <span class="count" data-stars hidden></span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- hero -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap">
+        <h1 id="hero-title" class="hero-title">
+          <span class="sr">The pulse of your machine.</span>
+          <span class="px px-hero" data-pixel="THE PULSE OF|YOUR MACHINE." data-assemble aria-hidden="true"></span>
+        </h1>
+        <div class="hero-copy">
+          <p class="lede">A tiny monochrome widget for macOS and Windows. CPU, memory, temperature and disk at a glance, plus the Claude Code tokens you spent this week.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/itsnothyun/pulse">
+              <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z"/></svg>
+              <span>Star on GitHub</span>
+              <span class="count" data-stars hidden></span>
+            </a>
+            <a class="btn btn-ghost" href="#install">
+              <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg>
+              <span>Download</span>
+            </a>
+          </div>
+          <p class="meta">Free and open source · MIT · macOS 13+ · Windows 10 &amp; 11</p>
+        </div>
+      </div>
+
+      <figure class="desktops wrap-wide" aria-label="Pulse running on a macOS desktop and a Windows desktop">
+        <div class="os-tabs" role="tablist" aria-label="Choose a desktop">
+          <button role="tab" type="button" data-os-tab="mac" aria-selected="true" aria-controls="desk-mac">macOS</button>
+          <button role="tab" type="button" data-os-tab="win" aria-selected="false" aria-controls="desk-win" tabindex="-1">Windows</button>
+        </div>
+        <div class="desk-grid">
+          <div class="desk desk-mac is-active" id="desk-mac" data-desktop="mac" role="tabpanel" aria-label="macOS">
+            <div class="screen">
+              <div class="menubar" aria-hidden="true">
+                <span class="mb-dot"></span><b>Code</b><span>File</span><span>Edit</span><span class="mb-hide">View</span><span class="mb-hide">Window</span>
+                <span class="mb-right"><i class="wifi"></i><i class="batt"></i><span>Thu 09:41</span></span>
+              </div>
+              <div class="win win-editor" aria-hidden="true">
+                <div class="win-bar"><i></i><i></i><i></i><span>pulse — main.swift</span></div>
+                <div class="code">
+                  <i style="--w:42%"></i><i style="--w:66%;--x:6%"></i><i style="--w:54%;--x:6%"></i><i style="--w:30%;--x:12%"></i>
+                  <i style="--w:72%;--x:12%"></i><i style="--w:20%;--x:6%"></i><i style="--w:48%"></i><i style="--w:62%;--x:6%"></i>
+                </div>
+                <div class="term"><span>~/pulse</span> <b>claude</b><em></em></div>
+              </div>
+              <div class="desk-slot"><canvas aria-hidden="true"></canvas></div>
+              <div class="dock" aria-hidden="true"><i></i><i></i><i></i><i class="dock-pulse"></i><i></i><i></i></div>
+            </div>
+            <figcaption>macOS 13+ · Apple Silicon &amp; Intel</figcaption>
+          </div>
+
+          <div class="desk desk-win" id="desk-win" data-desktop="win" role="tabpanel" aria-label="Windows">
+            <div class="screen">
+              <div class="win win-editor win-style-w" aria-hidden="true">
+                <div class="win-bar"><span>main.cs — Pulse</span><b class="ctl"><i></i><i></i><i></i></b></div>
+                <div class="code">
+                  <i style="--w:50%"></i><i style="--w:38%;--x:6%"></i><i style="--w:70%;--x:6%"></i><i style="--w:44%;--x:12%"></i>
+                  <i style="--w:58%;--x:12%"></i><i style="--w:26%;--x:6%"></i><i style="--w:64%"></i><i style="--w:40%;--x:6%"></i>
+                </div>
+                <div class="term"><span>PS C:\pulse&gt;</span> <b>claude</b><em></em></div>
+              </div>
+              <div class="desk-slot"><canvas aria-hidden="true"></canvas></div>
+              <div class="taskbar" aria-hidden="true">
+                <span class="tb-apps"><i class="tb-start"></i><i class="tb-search"></i><i></i><i></i><i class="tb-pulse"></i><i></i></span>
+                <span class="tb-tray"><i class="wifi"></i><span>09:41<br>16/10/2026</span></span>
+              </div>
+            </div>
+            <figcaption>Windows 10 &amp; 11 · x64</figcaption>
+          </div>
+        </div>
+        <p class="synthetic">Live simulation with synthetic numbers, drawn with Pulse's own pixel font and layout.</p>
+      </figure>
+    </section>
+
+    <!-- vitals -->
+    <section class="section vitals" id="vitals" aria-labelledby="vitals-title">
+      <div class="wrap vitals-grid">
+        <div class="vitals-widget">
+          <div class="vw-sticky">
+            <div class="seg" role="group" aria-label="Show the widget as it appears on">
+              <button type="button" data-vitals-os="mac" aria-pressed="true">macOS</button>
+              <button type="button" data-vitals-os="win" aria-pressed="false">Windows</button>
+            </div>
+            <div class="vw-holder" data-vitals-widget><canvas role="img" aria-label="Pulse widget in full size, showing every metric"></canvas></div>
+          </div>
+        </div>
+        <div class="vitals-copy">
+          <h2 id="vitals-title" class="h2">
+            <span class="sr">Everything at a glance.</span>
+            <span class="px px-h2" data-pixel="EVERYTHING|AT A GLANCE." aria-hidden="true"></span>
+          </h2>
+          <p class="intro">One look tells you how the machine is doing. Point at a row to find it in the widget.</p>
+          <ul class="metric-list">
+            <li tabindex="0" data-metric="cpu">
+              <span class="m-key px-key" data-pixel="CPU" aria-hidden="true"></span>
+              <div><h3>Processor</h3><p>Total load with a meter for every core, and the last thirty seconds as a trend.</p></div>
+            </li>
+            <li tabindex="0" data-metric="mem">
+              <span class="m-key px-key" data-pixel="MEM" aria-hidden="true"></span>
+              <div><h3>Memory</h3><p><span data-src="mac">Matches Activity Monitor's “Memory Used”: app memory, wired and compressed.</span><span data-src="win" hidden>Physical memory in use against what's installed.</span></p></div>
+            </li>
+            <li tabindex="0" data-metric="tmp">
+              <span class="m-key px-key" data-pixel="TMP" aria-hidden="true"></span>
+              <div><h3>Temperature</h3><p><span data-src="mac">Read from the Apple Silicon SoC sensors, with the peak beside it.</span><span data-src="win" hidden>Read from the ACPI thermal zone. Some desktops don't report one, and Pulse says N/A rather than guess.</span> The bar blinks when it runs hot.</p></div>
+            </li>
+            <li tabindex="0" data-metric="dsk">
+              <span class="m-key px-key" data-pixel="DSK" aria-hidden="true"></span>
+              <div><h3>Disk</h3><p>Free space on the <span data-src="mac">startup volume</span><span data-src="win" hidden>system drive</span>.</p></div>
+            </li>
+            <li tabindex="0" data-metric="gpu">
+              <span class="m-key px-key" data-pixel="GPU" aria-hidden="true"></span>
+              <div><h3>Graphics</h3><p>GPU load, from <span data-src="mac">the IOAccelerator statistics</span><span data-src="win" hidden>the same GPU Engine counters Task Manager uses</span>.</p></div>
+            </li>
+            <li tabindex="0" data-metric="net">
+              <span class="m-key px-key" data-pixel="NET" aria-hidden="true"></span>
+              <div><h3>Network</h3><p>Download and upload per second across your physical connections.</p></div>
+            </li>
+            <li tabindex="0" data-metric="swap">
+              <span class="m-key px-key" data-pixel="SWP" aria-hidden="true"></span>
+              <div><h3><span data-src="mac">Swap</span><span data-src="win" hidden>Commit</span></h3><p><span data-src="mac">How much memory has spilled to disk.</span><span data-src="win" hidden>Commit charge against the limit, Windows' measure of memory plus page file.</span></p></div>
+            </li>
+            <li tabindex="0" data-metric="pwr">
+              <span class="m-key px-key" data-pixel="PWR" aria-hidden="true"></span>
+              <div><h3>Power</h3><p>Battery level and whether it's charging, or AC on a desktop.</p></div>
+            </li>
+            <li tabindex="0" data-metric="claude">
+              <span class="m-key px-key" data-pixel="AI" aria-hidden="true"></span>
+              <div><h3>Claude Code</h3><p>Your week in tokens. <a href="#claude">How it counts</a></p></div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- sizes -->
+    <section class="section sizes" id="sizes" aria-labelledby="sizes-title">
+      <div class="wrap">
+        <div class="sizes-head">
+          <h2 id="sizes-title" class="h2">
+            <span class="sr">Three sizes. One click.</span>
+            <span class="px px-h2" data-pixel="THREE SIZES.|ONE CLICK." aria-hidden="true"></span>
+          </h2>
+          <p class="intro">Full when you're watching closely. Compact for the four numbers that matter. Mini when you only want it in the corner of your eye, with no motion at all.</p>
+        </div>
+
+        <div class="stage" data-stage>
+          <div class="stage-widget"><canvas role="img" aria-label="Interactive Pulse widget. Use the size buttons below to change its size."></canvas></div>
+          <div class="ctx-menu" role="menu" aria-label="Pulse options" data-menu hidden>
+            <p class="ctx-label" aria-hidden="true">Size</p>
+            <button role="menuitemradio" type="button" data-menu-size="full" aria-checked="true">Full</button>
+            <button role="menuitemradio" type="button" data-menu-size="compact" aria-checked="false">Compact</button>
+            <button role="menuitemradio" type="button" data-menu-size="mini" aria-checked="false">Mini</button>
+            <hr>
+            <button role="menuitemcheckbox" type="button" aria-checked="true">Always on Top</button>
+            <button role="menuitemcheckbox" type="button" aria-checked="false">Launch at Login</button>
+            <hr>
+            <button role="menuitem" type="button" aria-disabled="true" title="Opens Activity Monitor or Task Manager in the real app">Open Activity Monitor</button>
+            <button role="menuitem" type="button" data-quit>Quit Pulse</button>
+          </div>
+          <button class="btn btn-ghost relaunch" type="button" data-relaunch hidden>Relaunch Pulse</button>
+        </div>
+
+        <div class="stage-controls">
+          <div class="seg seg-size" role="group" aria-label="Widget size">
+            <button type="button" data-size="full" aria-pressed="true"><i class="ico-full" aria-hidden="true"></i>Full</button>
+            <button type="button" data-size="compact" aria-pressed="false"><i class="ico-compact" aria-hidden="true"></i>Compact</button>
+            <button type="button" data-size="mini" aria-pressed="false"><i class="ico-mini" aria-hidden="true"></i>Mini</button>
+          </div>
+          <button class="btn btn-ghost btn-small" type="button" data-open-menu aria-haspopup="menu">Options</button>
+          <span class="sr" aria-live="polite" data-size-status></span>
+        </div>
+
+        <ul class="gestures">
+          <li><b>Drag it anywhere.</b> Pulse remembers where you left it.</li>
+          <li><b>Click the header</b> to step from Full to Compact to Mini and back.</li>
+          <li><b>Right-click</b> for size, always on top, launch at login and quit.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- claude -->
+    <section class="section claude" id="claude" aria-labelledby="claude-title">
+      <div class="wrap">
+        <h2 id="claude-title" class="h2">
+          <span class="sr">And your week in Claude Code.</span>
+          <span class="px px-h2" data-pixel="AND YOUR WEEK|IN CLAUDE CODE." aria-hidden="true"></span>
+        </h2>
+
+        <div class="claude-grid">
+          <div class="claude-board" aria-label="Example week of Claude Code tokens, synthetic">
+            <div class="board-top">
+              <div>
+                <p class="board-num"><span class="px px-num" data-claude-week data-pixel="0" aria-hidden="true"></span></p>
+                <p class="board-label">tokens this week</p>
+              </div>
+              <dl class="board-stats">
+                <div><dt>Today</dt><dd><span class="px px-stat" data-claude-today data-pixel="0" aria-hidden="true"></span><span class="sr"></span></dd></div>
+                <div><dt>Last 5 h</dt><dd><span class="px px-stat" data-claude-five data-pixel="0" aria-hidden="true"></span><span class="sr"></span></dd></div>
+              </dl>
+            </div>
+            <div class="board-chart" data-claude-chart><canvas aria-hidden="true"></canvas></div>
+            <p class="synthetic">Synthetic week, Monday to Sunday. Today is lit.</p>
+          </div>
+
+          <div class="claude-copy">
+            <div class="fact">
+              <h3>Read from your own disk.</h3>
+              <p>Claude Code keeps a transcript of every session in <code>~/.claude/projects</code> (or <code>$CLAUDE_CONFIG_DIR</code>). Pulse adds up the token usage on every response since Monday at midnight.</p>
+            </div>
+            <div class="fact">
+              <h3>Counted once.</h3>
+              <p>Responses are de-duplicated by message and request id. After the first scan, Pulse only reads what was appended, so the tally costs next to nothing.</p>
+            </div>
+            <div class="fact">
+              <h3>Today, the last five hours, and who's live.</h3>
+              <p>A session counts as live while its transcript changed in the last five minutes.</p>
+            </div>
+            <figure class="code-fig">
+              <figcaption>What Pulse reads, one line per response</figcaption>
+<pre><code><span class="c-d">{</span><span class="c-k">"type"</span>:<span class="c-s">"assistant"</span>, <span class="c-k">"timestamp"</span>:<span class="c-s">"2026-10-15T08:48:26Z"</span>,
+ <span class="c-k">"sessionId"</span>:<span class="c-s">"…"</span>, <span class="c-k">"requestId"</span>:<span class="c-s">"req_…"</span>,
+ <span class="c-k">"message"</span>:<span class="c-d">{</span><span class="c-k">"id"</span>:<span class="c-s">"msg_…"</span>,
+   <span class="c-hl"><span class="c-k">"usage"</span>:<span class="c-d">{</span><span class="c-k">"input_tokens"</span>:2, <span class="c-k">"output_tokens"</span>:1899,
+            <span class="c-k">"cache_creation_input_tokens"</span>:136842,
+            <span class="c-k">"cache_read_input_tokens"</span>:27133<span class="c-d">}</span></span><span class="c-d">}}</span></code></pre>
+            </figure>
+            <p class="fine">Claude Code only: not the Claude desktop or web apps, and not your plan's limits. No account, no sign-in, no network requests.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- footprint -->
+    <section class="footprint" aria-label="How Pulse behaves">
+      <div class="wrap">
+        <p class="fp-line">Built to stay out of the way. Pulse refreshes once a second, idles at a few percent CPU, makes no network requests, and goes completely still when your system asks for reduced motion.</p>
+      </div>
+    </section>
+
+    <!-- install -->
+    <section class="section install" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <h2 id="install-title" class="h2">
+          <span class="sr">Install in a minute.</span>
+          <span class="px px-h2" data-pixel="INSTALL IN|A MINUTE." aria-hidden="true"></span>
+        </h2>
+        <div class="install-grid">
+          <article class="install-col" aria-labelledby="inst-mac">
+            <h3 id="inst-mac">macOS</h3>
+            <p class="req">macOS 13 or later · Apple Silicon and Intel</p>
+            <ol class="steps">
+              <li>Download and unzip.
+                <a class="btn btn-primary btn-dl" href="https://github.com/itsnothyun/pulse/releases/latest/download/Pulse-macos-universal.zip">
+                  <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg>
+                  <span>Pulse for macOS</span><small>.zip</small>
+                </a>
+              </li>
+              <li>Move <b>Pulse.app</b> to Applications.</li>
+              <li>Pulse isn't notarized yet, so clear the quarantine flag once:
+                <div class="cmd">
+                  <code id="cmd-mac">xattr -dr com.apple.quarantine /Applications/Pulse.app</code>
+                  <button type="button" class="copy" data-copy="cmd-mac"><span>Copy</span></button>
+                </div>
+              </li>
+              <li>Open Pulse. It appears in the top-right corner.</li>
+            </ol>
+          </article>
+          <article class="install-col" aria-labelledby="inst-win">
+            <h3 id="inst-win">Windows</h3>
+            <p class="req">Windows 10 or 11 · x64</p>
+            <ol class="steps">
+              <li>Download and unzip.
+                <a class="btn btn-primary btn-dl" href="https://github.com/itsnothyun/pulse/releases/latest/download/Pulse-windows-x64.zip">
+                  <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg>
+                  <span>Pulse for Windows</span><small>.zip</small>
+                </a>
+              </li>
+              <li>Run <b>Pulse.exe</b>. There's no installer, and .NET comes built in.</li>
+              <li>The build isn't code-signed yet, so SmartScreen may warn you. Choose <b>More info</b>, then <b>Run anyway</b>.</li>
+              <li>Pulse appears in the top-right corner.</li>
+            </ol>
+          </article>
+        </div>
+        <details class="source">
+          <summary>Build it from source</summary>
+          <div class="source-body">
+            <p>macOS, with the Xcode command line tools:</p>
+            <div class="cmd"><code id="cmd-src-mac">git clone https://github.com/itsnothyun/pulse &amp;&amp; ./pulse/macos/build.sh</code><button type="button" class="copy" data-copy="cmd-src-mac"><span>Copy</span></button></div>
+            <p>Windows, with the .NET 8 SDK:</p>
+            <div class="cmd"><code id="cmd-src-win">dotnet publish pulse/windows/Pulse/Pulse.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o out</code><button type="button" class="copy" data-copy="cmd-src-win"><span>Copy</span></button></div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- close -->
+    <section class="close" aria-labelledby="close-title">
+      <div class="wrap close-inner">
+        <h2 id="close-title" class="h2">
+          <span class="sr">Keep a pulse on it.</span>
+          <span class="px px-close" data-pixel="KEEP A PULSE|ON IT." aria-hidden="true"></span>
+        </h2>
+        <p>Pulse is free and open source. A star helps other people find it.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/itsnothyun/pulse">
+            <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z"/></svg>
+            <span>Star on GitHub</span>
+            <span class="count" data-stars hidden></span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/itsnothyun/pulse/releases/latest">
+            <span>See the latest release</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p><img src="img/icon.png" width="20" height="20" alt=""> <span>Pulse is MIT licensed. Made by <a href="https://github.com/itsnothyun">itsnothyun</a>.</span></p>
+      <ul>
+        <li><a href="https://github.com/itsnothyun/pulse">Source</a></li>
+        <li><a href="https://github.com/itsnothyun/pulse/releases">Releases</a></li>
+        <li><a href="https://github.com/itsnothyun/pulse/blob/main/LICENSE">License</a></li>
+      </ul>
+      <p class="fine">Not affiliated with Apple, Microsoft or Anthropic. Claude Code is a product of Anthropic.</p>
+    </div>
+  </footer>
+</body>
+</html>

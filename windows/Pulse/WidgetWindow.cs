@@ -27,7 +27,7 @@ sealed class WidgetWindow : Window
         UseLayoutRounding = true;
 
         sampler = new Sampler();
-        view = new PulseView(sampler) { Compact = settings.Compact };
+        view = new PulseView(sampler) { Size = settings.WidgetSize };
         var loops = new Loops(view);
         var root = new Grid();
         root.Children.Add(view);
@@ -45,6 +45,13 @@ sealed class WidgetWindow : Window
             BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(350)));
         };
         Closing += (_, _) => SavePosition();
+        SizeChanged += (_, e) =>
+        {
+            // right-hand widgets grow and shrink leftward, so the edge you placed stays put
+            if (!IsLoaded || e.PreviousSize.Width == 0) return;
+            var wa = SystemParameters.WorkArea;
+            if (Left + e.PreviousSize.Width / 2 > wa.Left + wa.Width / 2) Left += e.PreviousSize.Width - e.NewSize.Width;
+        };
     }
 
     void Place()
@@ -75,22 +82,30 @@ sealed class WidgetWindow : Window
         double l = Left, t = Top;
         try { DragMove(); } catch (InvalidOperationException) { }
         if (Math.Abs(Left - l) > 2 || Math.Abs(Top - t) > 2) SavePosition();
-        else if (inHeader) SetCompact(!view.Compact);   // a click (not a drag) on the header toggles compact
+        else if (inHeader) SetSize(view.Size.Next());   // a click (not a drag) on the header changes size
     }
 
-    void SetCompact(bool on)
+    readonly System.Collections.Generic.Dictionary<WidgetSize, MenuItem> sizeItems = new();
+
+    void SetSize(WidgetSize size)
     {
-        view.Compact = on;
-        settings.Compact = on;
+        view.Size = size;
+        settings.WidgetSize = size;
         settings.Save();
-        if (ContextMenu?.Items[0] is MenuItem m) m.IsChecked = on;
+        foreach (var (s, item) in sizeItems) item.IsChecked = s == size;
     }
 
     ContextMenu BuildMenu()
     {
         var menu = new ContextMenu();
-        var compact = new MenuItem { Header = "Compact", IsCheckable = true, IsChecked = settings.Compact };
-        compact.Click += (_, _) => SetCompact(compact.IsChecked);
+        var sizeMenu = new MenuItem { Header = "Size" };
+        foreach (var s in new[] { WidgetSize.Full, WidgetSize.Compact, WidgetSize.Mini })
+        {
+            var item = new MenuItem { Header = s.ToString(), IsCheckable = true, IsChecked = s == settings.WidgetSize };
+            item.Click += (_, _) => SetSize(s);
+            sizeItems[s] = item;
+            sizeMenu.Items.Add(item);
+        }
         var onTop = new MenuItem { Header = "Always on Top", IsCheckable = true, IsChecked = settings.OnTop };
         onTop.Click += (_, _) => { Topmost = settings.OnTop = onTop.IsChecked; settings.Save(); };
         var login = new MenuItem { Header = "Launch at Login", IsCheckable = true, IsChecked = Settings.LaunchAtLogin };
@@ -105,7 +120,7 @@ sealed class WidgetWindow : Window
         };
         var quit = new MenuItem { Header = "Quit Pulse" };
         quit.Click += (_, _) => Close();
-        menu.Items.Add(compact);
+        menu.Items.Add(sizeMenu);
         menu.Items.Add(onTop);
         menu.Items.Add(login);
         menu.Items.Add(new Separator());

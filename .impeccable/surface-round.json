@@ -1,0 +1,232 @@
+{
+  "title": "Choose the page structure",
+  "question": "Pulse's look is settled (monochrome pixels, 5\u00d77 font). This picks how the page is composed. Lock one, steer it, or re-roll.",
+  "options": [
+    {
+      "id": "two-desktops",
+      "label": "Two Desktops",
+      "kicker": "THE ROLL",
+      "lineage": "split-screen OS comparison, a macOS desktop beside a Windows desktop",
+      "thesis": "The same live widget, running on a pixel Mac desktop and a pixel Windows desktop at once.",
+      "palette": [
+        "#090909",
+        "#F2F2ED",
+        "#B3B3AD",
+        "#757573",
+        "#262626"
+      ],
+      "materials": [
+        "live pixel widget",
+        "pixel-drawn desktops",
+        "scanlines"
+      ],
+      "viewport": "Headline in pixel type across the top; below, two side-by-side desktops (menu bar vs taskbar), each with Pulse ticking in its corner, both fed by one simulated feed. Star on GitHub and Download sit under the headline.",
+      "risk": "Two widgets at once can halve the hero's focus on small screens; phones show one desktop with an OS toggle.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {
+            "label": "nav",
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 1
+          },
+          {
+            "label": "pixel headline + star CTA",
+            "x": 1,
+            "y": 1,
+            "w": 10,
+            "h": 2,
+            "accent": true
+          },
+          {
+            "label": "macOS desktop \u00b7 live Pulse",
+            "x": 0,
+            "y": 3,
+            "w": 6,
+            "h": 4
+          },
+          {
+            "label": "Windows desktop \u00b7 live Pulse",
+            "x": 6,
+            "y": 3,
+            "w": 6,
+            "h": 4
+          },
+          {
+            "label": "metric chapters",
+            "x": 0,
+            "y": 7,
+            "w": 12,
+            "h": 2
+          },
+          {
+            "label": "Claude tally \u00b7 install \u00b7 star",
+            "x": 0,
+            "y": 9,
+            "w": 12,
+            "h": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "pinned-widget",
+      "label": "The Widget Is the Page",
+      "lineage": "scroll-told product pages with the device pinned while the copy changes",
+      "thesis": "One giant live widget pinned on screen while you scroll through each of its rows as a chapter.",
+      "palette": [
+        "#090909",
+        "#F2F2ED",
+        "#B3B3AD",
+        "#757573",
+        "#262626"
+      ],
+      "materials": [
+        "live pixel widget at 2\u20133\u00d7 scale",
+        "row spotlight",
+        "scanlines"
+      ],
+      "viewport": "Huge PULSE pixel wordmark left with the one-line pitch and Star on GitHub; the full widget right, ticking live at 2\u00d7. Scrolling lights up CPU, then memory, temperature, disk, tiles, Claude, each with its own short copy.",
+      "risk": "Pinned scroll needs careful fallback on phones and with reduced motion; it becomes stacked chapters there.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {
+            "label": "nav",
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 1
+          },
+          {
+            "label": "wordmark + pitch + star",
+            "x": 0,
+            "y": 1,
+            "w": 6,
+            "h": 3,
+            "accent": true
+          },
+          {
+            "label": "live widget (pinned)",
+            "x": 7,
+            "y": 1,
+            "w": 5,
+            "h": 8
+          },
+          {
+            "label": "chapter: CPU \u2192 MEM \u2192 TMP",
+            "x": 0,
+            "y": 4,
+            "w": 6,
+            "h": 3
+          },
+          {
+            "label": "chapter: Claude tally",
+            "x": 0,
+            "y": 7,
+            "w": 6,
+            "h": 2
+          },
+          {
+            "label": "install \u00b7 star",
+            "x": 0,
+            "y": 9,
+            "w": 12,
+            "h": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "datasheet",
+      "label": "The Datasheet",
+      "lineage": "electronic component datasheets: pinouts, spec tables, ruled grids",
+      "thesis": "Pulse documented like a chip: the widget as the part, every metric a labeled pin.",
+      "palette": [
+        "#090909",
+        "#F2F2ED",
+        "#B3B3AD",
+        "#757573",
+        "#262626"
+      ],
+      "materials": [
+        "ruled grid",
+        "leader lines",
+        "spec tables",
+        "live widget as the part"
+      ],
+      "viewport": "Datasheet header (PART: PULSE \u00b7 REV 1.0 \u00b7 MACOS / WINDOWS) with Star on GitHub; the live widget centered with leader lines out to each metric's annotation, like a pinout.",
+      "risk": "Can read cold and technical to non-developers if the copy is too terse.",
+      "wireframe": {
+        "cols": 12,
+        "rows": 10,
+        "regions": [
+          {
+            "label": "datasheet header + star",
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 2,
+            "accent": true
+          },
+          {
+            "label": "pin labels",
+            "x": 0,
+            "y": 2,
+            "w": 3,
+            "h": 5
+          },
+          {
+            "label": "live widget (the part)",
+            "x": 3,
+            "y": 2,
+            "w": 6,
+            "h": 5
+          },
+          {
+            "label": "pin labels",
+            "x": 9,
+            "y": 2,
+            "w": 3,
+            "h": 5
+          },
+          {
+            "label": "spec tables \u00b7 Claude tally",
+            "x": 0,
+            "y": 7,
+            "w": 12,
+            "h": 2
+          },
+          {
+            "label": "install \u00b7 star",
+            "x": 0,
+            "y": 9,
+            "w": 12,
+            "h": 1
+          }
+        ]
+      }
+    }
+  ],
+  "reroll": true,
+  "steer": true,
+  "buildPath": {
+    "value": "code",
+    "toggle": false
+  },
+  "seed": {
+    "key": "097ba898",
+    "scope": "surface",
+    "mode": "persuade",
+    "dealt": [
+      6,
+      1,
+      3
+    ],
+    "locked": "two-desktops"
+  }
+}

@@ -59,8 +59,8 @@ xattr -dr com.apple.quarantine /Applications/Pulse.app
 ## Use
 
 - **Drag** anywhere to move it — the position is remembered.
-- **Click the header** to switch between full and compact.
-- **Right-click** for *Compact*, *Always on Top*, *Launch at Login*, Activity Monitor / Task Manager, *Quit*.
+- **Click the header** to step through three sizes: **Full** (everything), **Compact** (CPU, memory, temperature, disk) and **Mini** (one quiet line, no motion).
+- **Right-click** for *Size*, *Always on Top*, *Launch at Login*, Activity Monitor / Task Manager, *Quit*.
 
 ## Claude Code usage
 
@@ -73,6 +73,15 @@ and each pass reads only the bytes appended since the last one, so after the fir
 - **Live** = sessions whose transcript changed in the last 5 minutes.
 - It counts Claude Code only (not the Claude desktop or web apps) and can't see plan limits.
 - Nothing leaves your machine — Pulse makes no network requests.
+
+## Website
+
+`site/` is the marketing page: plain static files, no build. Serve the folder with any web server;
+`deploy/nginx.conf` is a ready-made nginx server block for a VPS.
+
+```sh
+python3 -m http.server -d site 8080   # preview locally
+```
 
 ## Build from source
 
@@ -92,7 +101,7 @@ dotnet publish windows/Pulse/Pulse.csproj -c Release -r win-x64 --self-contained
 Both apps can render themselves to a PNG without opening a window, which is handy for screenshots and CI:
 
 ```sh
-Pulse --snapshot out.png [--compact] [--demo]      # --demo uses fake numbers
+Pulse --snapshot out.png [--compact | --mini] [--demo]   # --demo uses fake numbers
 ```
 
 ## Project layout
@@ -100,6 +109,7 @@ Pulse --snapshot out.png [--compact] [--demo]      # --demo uses fake numbers
 ```
 macos/     Pulse.swift — the whole macOS app (SwiftUI + AppKit), build.sh, icon
 windows/   Pulse/ — WPF app: pixel renderer, probes, Claude usage scanner
+site/      marketing page — static HTML/CSS/JS, no build step (see deploy/)
 assets/    icon
 docs/      screenshots
 ```

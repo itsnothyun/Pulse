@@ -307,13 +307,14 @@ struct Scanner: NSViewRepresentable {
 
 /// Static scanlines plus a faint CRT band slowly sweeping down the panel.
 struct CRTOverlay: View {
+    var sweep = true
     var body: some View {
         ZStack {
             Canvas { ctx, size in
                 var y: CGFloat = 0
                 while y < size.height { ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.white.opacity(0.022))); y += 3 }
             }
-            if !reduceMotion && !snapshotMode { Sweep() }
+            if sweep && !reduceMotion && !snapshotMode { Sweep() }
         }
         .allowsHitTesting(false)
     }
@@ -842,17 +843,23 @@ struct WidgetView: View {
     var body: some View {
         let t = s.cpuTemp ?? 0
         let hot = t >= 85 || s.thermalState == .serious || s.thermalState == .critical
+        let mini = prefs.size == .mini
+        let radius: CGFloat = mini ? 10 : 14
         Group {
-            if prefs.compact { compact(hot: hot) } else { full(hot: hot) }
+            switch prefs.size {
+            case .full: full(hot: hot).padding(18).frame(width: 320)
+            case .compact: compact(hot: hot).padding(18).frame(width: 320)
+            case .mini: miniView(hot: hot)
+            }
         }
-        .padding(18)
-        .frame(width: 320)
         .background(Ink.bg)
-        .overlay(CRTOverlay())
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Ink.on.opacity(0.16), lineWidth: 1))
+        .overlay(CRTOverlay(sweep: !mini))
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Ink.on.opacity(0.16), lineWidth: 1))
         .contextMenu {
-            Toggle("Compact", isOn: $prefs.compact)
+            Picker("Size", selection: $prefs.size) {
+                ForEach(WidgetSize.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
             Toggle("Always on Top", isOn: $prefs.onTop)
             Toggle("Launch at Login", isOn: $prefs.launchAtLogin)
             Divider()
@@ -869,11 +876,11 @@ struct WidgetView: View {
             HeaderScanner(hot: (s.cpuTemp ?? 0) >= 85)
             Spacer()
             PixelText(text: s.clock, scale: 1.5, color: Ink.mid)
-            PixelText(text: prefs.compact ? "+" : "-", scale: 1.5, color: Ink.dim)
+            PixelText(text: prefs.size == .full ? "-" : "+", scale: 1.5, color: Ink.dim)
         }
         .contentShape(Rectangle())
-        .onTapGesture { prefs.compact.toggle() }
-        .help("Click to toggle compact view · right-click for options")
+        .onTapGesture { prefs.size = prefs.size.next }
+        .help("Click to change size · right-click for options")
     }
 
     func tempState(_ t: Double) -> String {
@@ -974,6 +981,31 @@ struct WidgetView: View {
         }
     }
 
+    /// One quiet line: no scanner, no sweep. Only a running-hot temperature blinks.
+    func miniView(hot: Bool) -> some View {
+        let t = s.cpuTemp ?? 0
+        let items: [(String, String, Bool)] = [
+            ("CPU", F.pct(s.cpu), false),
+            ("MEM", F.pct(s.memUsed / s.memTotal), false),
+            ("TMP", s.cpuTemp == nil ? "N/A" : "\(Int(t.rounded()))°", hot),
+        ]
+        return HStack(spacing: 12) {
+            Rectangle().fill(Ink.on.opacity(0.85)).frame(width: 4, height: 4)
+            ForEach(items, id: \.0) { it in
+                HStack(spacing: 5) {
+                    PixelText(text: it.0, scale: 1, color: Ink.dim)
+                    PixelText(text: it.1, scale: 1.5, color: it.2 && s.tick ? Ink.off : Ink.on)
+                        .frame(width: PixelText.width("100%", 1.5), alignment: .trailing)   // fixed: digits never shift the window
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .contentShape(Rectangle())
+        .onTapGesture { prefs.size = prefs.size.next }
+        .help("Click to expand · right-click for options")
+    }
+
     @ViewBuilder func compact(hot: Bool) -> some View {
         let t = s.cpuTemp ?? 0
         let items: [(String, Double, Double, String)] = [
@@ -1009,10 +1041,17 @@ struct WidgetView: View {
 
 // MARK: - Prefs
 
+/// Three sizes, cycled by clicking the header: everything → the four big numbers → one quiet line.
+enum WidgetSize: String, CaseIterable {
+    case full, compact, mini
+    var next: WidgetSize { self == .full ? .compact : self == .compact ? .mini : .full }
+    var title: String { self == .full ? "Full" : self == .compact ? "Compact" : "Mini" }
+}
+
 @MainActor
 final class Prefs: ObservableObject {
     @Published var onTop: Bool { didSet { UserDefaults.standard.set(onTop, forKey: "onTop"); apply?() } }
-    @Published var compact: Bool { didSet { UserDefaults.standard.set(compact, forKey: "compact"); resize?() } }
+    @Published var size: WidgetSize { didSet { UserDefaults.standard.set(size.rawValue, forKey: "size"); resize?() } }
     @Published var launchAtLogin: Bool {
         didSet {
             do { launchAtLogin ? try SMAppService.mainApp.register() : try SMAppService.mainApp.unregister() }
@@ -1023,7 +1062,8 @@ final class Prefs: ObservableObject {
     var resize: (() -> Void)?
     init() {
         onTop = UserDefaults.standard.object(forKey: "onTop") as? Bool ?? true
-        compact = UserDefaults.standard.bool(forKey: "compact")
+        size = UserDefaults.standard.string(forKey: "size").flatMap(WidgetSize.init)
+            ?? (UserDefaults.standard.bool(forKey: "compact") ? .compact : .full)
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 }
@@ -1071,7 +1111,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func fit(animate: Bool) {
         let size = host.fittingSize
         var f = panel.frame
-        f.origin.y += f.height - size.height
+        f.origin.y += f.height - size.height                  // top edge stays put
+        if let scr = panel.screen?.visibleFrame, f.midX > scr.midX {
+            f.origin.x += f.width - size.width                // right-hand widgets grow and shrink leftward
+        }
         f.size = size
         panel.setFrame(f, display: true, animate: animate)
     }
@@ -1093,7 +1136,7 @@ enum PulseApp {
                     s.claude = s.claudeUsage.scanSync()
                     if let th = Thermals().read() { s.cpuTemp = th.cpu; s.maxTemp = th.max }; s.gpu = Probe.gpu()
                 }
-                let p = Prefs(); p.compact = args.contains("--compact")
+                let p = Prefs(); p.size = args.contains("--mini") ? .mini : args.contains("--compact") ? .compact : .full
                 let r = ImageRenderer(content: WidgetView(s: s, prefs: p)); r.scale = 2
                 if let img = r.nsImage, let t = img.tiffRepresentation,
                    let b = NSBitmapImageRep(data: t)?.representation(using: .png, properties: [:]) {

@@ -12,3 +12,7 @@ dist/
 
 # local snapshots
 snapshot-*.png
+
+# impeccable review captures (regenerable)
+.impeccable/review/
+.impeccable/questions/

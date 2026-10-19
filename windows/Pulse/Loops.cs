@@ -57,7 +57,7 @@ sealed class Loops
             g.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 255, 255), 1));
             g.Freeze();
             sweep.Fill = g;
-            sweep.Width = PulseView.W;
+            sweep.Width = PulseView.FullW;
             sweep.RenderTransform = sweepMove;
             Canvas.Children.Add(sweep);
         }
@@ -78,11 +78,14 @@ sealed class Loops
         }
         else pip.Visibility = Visibility.Collapsed;
 
+        scanner.Visibility = view.IsMini ? Visibility.Collapsed : Visibility.Visible;
+        sweep.Visibility = view.IsMini ? Visibility.Collapsed : Visibility.Visible;   // mini stays still
+
         double h = view.ActualHeight;
         if (h > 0 && Math.Abs(h - sweepHeight) > 0.5)
         {
             sweepHeight = h;
-            Canvas.Clip = new RectangleGeometry(new Rect(0, 0, PulseView.W, h), PulseView.Radius, PulseView.Radius);
+            Canvas.Clip = new RectangleGeometry(new Rect(0, 0, view.PanelWidth, h), view.Radius, view.Radius);
             if (motion)
                 sweepMove.BeginAnimation(TranslateTransform.YProperty,
                     new DoubleAnimation(-80, h, TimeSpan.FromSeconds(9)) { RepeatBehavior = RepeatBehavior.Forever });

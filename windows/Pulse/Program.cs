@@ -15,7 +15,7 @@ public static class Program
     {
         int i = Array.IndexOf(args, "--snapshot");
         if (i >= 0 && i + 1 < args.Length)
-            return Snapshot(args[i + 1], args.Contains("--compact"), args.Contains("--demo"));
+            return Snapshot(args[i + 1], args.Contains("--mini") ? WidgetSize.Mini : args.Contains("--compact") ? WidgetSize.Compact : WidgetSize.Full, args.Contains("--demo"));
 
         using var single = new Mutex(true, "Pulse.Widget.SingleInstance", out bool first);
         if (!first) return 0;                     // already running
@@ -25,7 +25,7 @@ public static class Program
     }
 
     /// <summary>Renders the widget to a PNG without opening a window (debug aid, used by CI).</summary>
-    static int Snapshot(string path, bool compact, bool demo)
+    static int Snapshot(string path, WidgetSize size, bool demo)
     {
         var s = new Sampler(start: false);
         if (demo) s.LoadDemo();
@@ -34,7 +34,7 @@ public static class Program
             for (int k = 0; k < 15; k++) { Thread.Sleep(100); s.Sample(); }
             s.ProbeSync();
         }
-        var v = new PulseView(s) { Compact = compact };
+        var v = new PulseView(s) { Size = size };
         v.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         v.Arrange(new Rect(v.DesiredSize));
         v.UpdateLayout();

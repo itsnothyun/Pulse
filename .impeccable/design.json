@@ -1,0 +1,468 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T02:24:03.835661+00:00",
+  "title": "Design System: Pulse",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Panel Black",
+        "canonical": "#090909",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "ground-raised": {
+        "role": "neutral",
+        "displayName": "Raised Black",
+        "canonical": "#0e0e0e",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "well": {
+        "role": "neutral",
+        "displayName": "Well Black",
+        "canonical": "#0f0f0e",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424241",
+          "#616160",
+          "#828281",
+          "#a5a5a4",
+          "#c9c9c8",
+          "#eeeeed"
+        ]
+      },
+      "wallpaper": {
+        "role": "neutral",
+        "displayName": "Dither Grey",
+        "canonical": "#121211",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#424241",
+          "#616160",
+          "#828281",
+          "#a5a5a4",
+          "#c9c9c8",
+          "#eeeeed"
+        ]
+      },
+      "pixel-on": {
+        "role": "primary",
+        "displayName": "Phosphor White",
+        "canonical": "#f2f2ed",
+        "tonalRamp": [
+          "#0b0b08",
+          "#252522",
+          "#42423e",
+          "#61615d",
+          "#83837e",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefea"
+        ]
+      },
+      "pixel-mid": {
+        "role": "neutral",
+        "displayName": "Steel Grey",
+        "canonical": "#b3b3ad",
+        "tonalRamp": [
+          "#0b0b08",
+          "#252521",
+          "#42423d",
+          "#62625c",
+          "#83837d",
+          "#a5a59f",
+          "#c9cac3",
+          "#efefe9"
+        ]
+      },
+      "text-dim": {
+        "role": "neutral",
+        "displayName": "Caption Grey",
+        "canonical": "#8c8c88",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#83837f",
+          "#a5a5a1",
+          "#c9c9c5",
+          "#efefea"
+        ]
+      },
+      "pixel-dim": {
+        "role": "neutral",
+        "displayName": "Ash",
+        "canonical": "#757573",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a3",
+          "#c9c9c7",
+          "#efefec"
+        ]
+      },
+      "edge-strong": {
+        "role": "neutral",
+        "displayName": "Strong Edge",
+        "canonical": "#4a4a47",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefeb"
+        ]
+      },
+      "rule-dotted": {
+        "role": "neutral",
+        "displayName": "Dotted Edge",
+        "canonical": "#3a3a37",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61615e",
+          "#82827f",
+          "#a5a5a2",
+          "#c9c9c6",
+          "#efefeb"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule Grey",
+        "canonical": "#303030",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "Chrome Edge",
+        "canonical": "#2a2a28",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252523",
+          "#424240",
+          "#61615f",
+          "#828280",
+          "#a5a5a3",
+          "#c9c9c7",
+          "#efefec"
+        ]
+      },
+      "pixel-off": {
+        "role": "neutral",
+        "displayName": "Unlit",
+        "canonical": "#262626",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-pixel": {
+        "displayName": "Display pixel",
+        "purpose": "Hero headline only: glyph table at 12px dots (11px on the close)."
+      },
+      "headline-pixel": {
+        "displayName": "Headline pixel",
+        "purpose": "Section headings at 6px dots; also the scale for pixel numbers (9px) and stats (3px)."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Hero pitch, max 34ch."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Metric names, gesture leads; 20px for facts, 24px for install columns."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose in Steel Grey, 52 to 58ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Meta lines, captions and fine print in Caption Grey, 13 to 15px."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "JSON excerpt, commands, counts and step numbers."
+      },
+      "widget-pixel-scales": {
+        "displayName": "Widget pixel scales",
+        "purpose": "Scale 1 labels, 1.5 clock/stats/Mini values, 2 titles and tile values, 3 hero numbers; dots shrink 0.75 at scale 3+."
+      }
+    },
+    "shadows": [
+      {
+        "name": "screen-bezel",
+        "value": "0 30px 60px -30px rgba(0,0,0,0.9), 0 0 0 6px #111110, 0 0 0 7px #232321",
+        "purpose": "Simulated monitors only."
+      },
+      {
+        "name": "window-lift",
+        "value": "0 24px 40px -18px rgba(0,0,0,0.85)",
+        "purpose": "Fake app windows on the desktops."
+      },
+      {
+        "name": "widget-drop",
+        "value": "drop-shadow(0 18px 24px rgba(0,0,0,0.6))",
+        "purpose": "Live widget canvas on a desktop (0 22px 30px 0.7 on the stage)."
+      },
+      {
+        "name": "menu",
+        "value": "0 18px 40px -12px rgba(0,0,0,0.9)",
+        "purpose": "Context menu."
+      },
+      {
+        "name": "nav-scrolled",
+        "value": "0 1px 0 #303030, 0 10px 24px -12px rgba(0,0,0,0.8)",
+        "purpose": "Sticky header after 8px of scroll."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every site transition."
+      },
+      {
+        "name": "press",
+        "value": "120ms",
+        "purpose": "Button active translateY(1px)."
+      },
+      {
+        "name": "hover",
+        "value": "160ms to 200ms",
+        "purpose": "Colour, border and background changes."
+      },
+      {
+        "name": "quit",
+        "value": "260ms opacity + blur(6px)",
+        "purpose": "Widget quitting on the stage."
+      },
+      {
+        "name": "dot-assemble",
+        "value": "420ms per dot, stagger up to ~0.6s",
+        "purpose": "Hero headline, once per load."
+      },
+      {
+        "name": "bar-tween",
+        "value": "450ms ease-out",
+        "purpose": "Segmented bars, only when a segment changes."
+      },
+      {
+        "name": "count-up",
+        "value": "1.2s ease-out",
+        "purpose": "Weekly token total."
+      },
+      {
+        "name": "scanner-beat",
+        "value": "160ms (70ms hot)",
+        "purpose": "Header scanner step with 90/50/25% trail."
+      },
+      {
+        "name": "live-breathe",
+        "value": "1.3s ease-in-out, 30% to 100%",
+        "purpose": "Live pip."
+      },
+      {
+        "name": "crt-sweep",
+        "value": "9s, 80px band at 4% white",
+        "purpose": "Faint sweep over Full and Compact; none in Mini."
+      },
+      {
+        "name": "caret",
+        "value": "1.1s steps(1)",
+        "purpose": "Terminal caret on the simulated desktops."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all loops stilled",
+        "purpose": "No smooth scroll, assembly, caret or widget loops; pip held at 85%."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone-narrow",
+        "value": "520px"
+      },
+      {
+        "name": "footer-stack",
+        "value": "640px"
+      },
+      {
+        "name": "nav-collapse",
+        "value": "760px"
+      },
+      {
+        "name": "single-desktop",
+        "value": "860px"
+      },
+      {
+        "name": "single-column",
+        "value": "900px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled off-white call to action (Star on GitHub, downloads).",
+      "html": "<a class=\"ds-btn ds-btn-primary\" href=\"#\"><svg class=\"ds-i\" viewBox=\"0 0 7 7\" aria-hidden=\"true\"><path d=\"M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z\"/></svg><span>Star on GitHub</span></a>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:12px;min-height:52px;padding:0 22px;border:1px solid #f2f2ed;border-radius:4px;font:600 15px/1 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;letter-spacing:.01em;text-decoration:none;cursor:pointer;transition:background-color 180ms cubic-bezier(.16,1,.3,1),border-color 180ms cubic-bezier(.16,1,.3,1),transform 120ms cubic-bezier(.16,1,.3,1)} .ds-btn:active{transform:translateY(1px)} .ds-btn:focus-visible{outline:2px solid #f2f2ed;outline-offset:3px} .ds-i{width:14px;height:14px;fill:currentColor;shape-rendering:crispEdges} .ds-btn-primary{background:#f2f2ed;color:#090909} .ds-btn-primary:hover{background:#ffffff}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Outlined secondary action (Download, Options, Relaunch).",
+      "html": "<a class=\"ds-btn-ghost\" href=\"#\"><svg class=\"ds-i\" viewBox=\"0 0 7 7\" aria-hidden=\"true\"><path d=\"M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z\"/><path d=\"M0 6h7v1h-7z\"/></svg><span>Download v1.0</span></a>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:12px;min-height:52px;padding:0 22px;border:1px solid #4a4a47;border-radius:4px;background:transparent;color:#f2f2ed;font:600 15px/1 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;text-decoration:none;transition:background-color 180ms cubic-bezier(.16,1,.3,1),border-color 180ms cubic-bezier(.16,1,.3,1)} .ds-btn-ghost:hover{border-color:#f2f2ed;background:rgba(242,242,237,.06)} .ds-btn-ghost:focus-visible{outline:2px solid #f2f2ed;outline-offset:3px} .ds-i{width:14px;height:14px;fill:currentColor;shape-rendering:crispEdges}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segmented-control",
+      "description": "OS toggle and size picker; active segment inverts.",
+      "html": "<div class=\"ds-seg\" role=\"group\" aria-label=\"Widget size\"><button type=\"button\" aria-pressed=\"true\">Full</button><button type=\"button\" aria-pressed=\"false\">Compact</button><button type=\"button\" aria-pressed=\"false\">Mini</button></div>",
+      "css": ".ds-seg{display:inline-flex;padding:3px;gap:3px;border:1px solid #303030;border-radius:6px;background:#090909} .ds-seg button{min-height:40px;padding:0 14px;border:0;border-radius:3px;background:transparent;color:#b3b3ad;font:600 14px 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color 160ms cubic-bezier(.16,1,.3,1),color 160ms cubic-bezier(.16,1,.3,1)} .ds-seg button:hover{color:#f2f2ed} .ds-seg button[aria-pressed=true]{background:#f2f2ed;color:#090909} .ds-seg button:focus-visible{outline:2px solid #f2f2ed;outline-offset:3px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Sticky 68px bar: pixel wordmark, grey section links, small Star button.",
+      "html": "<header class=\"ds-nav\"><span class=\"ds-brand\"><svg viewBox=\"0 0 29 7\" width=\"72\" height=\"17\" shape-rendering=\"crispEdges\" fill=\"#f2f2ed\"><path d=\"M0 0h4v1h-4zM0 1h1v6h-1zM4 1h1v2h-1zM1 3h3v1h-3zM6 0h1v6h-1zM10 0h1v6h-1zM7 6h3v1h-3zM12 0h1v6h-1zM12 6h5v1h-5zM19 0h4v1h-4zM18 1h1v2h-1zM19 3h3v1h-3zM22 4h1v2h-1zM18 6h4v1h-4zM24 0h5v1h-5zM24 1h1v5h-1zM25 3h3v1h-3zM24 6h5v1h-5z\"/></svg></span><nav><a href=\"#\">Vitals</a><a href=\"#\">Sizes</a><a href=\"#\">Claude Code</a><a href=\"#\">Install</a></nav></header>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:24px;height:68px;padding:0 24px;background:#090909;box-shadow:0 1px 0 #303030} .ds-brand{margin-right:auto} .ds-nav nav{display:flex;gap:4px} .ds-nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:#b3b3ad;font:500 15px 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;text-decoration:none;transition:color 160ms cubic-bezier(.16,1,.3,1)} .ds-nav a:hover{color:#f2f2ed} .ds-nav a:focus-visible{outline:2px solid #f2f2ed;outline-offset:3px}"
+    },
+    {
+      "name": "Command Well",
+      "kind": "input",
+      "refersTo": "command-well",
+      "description": "Recessed shell command with an inverting Copy cell.",
+      "html": "<div class=\"ds-cmd\"><code>xattr -dr com.apple.quarantine /Applications/Pulse.app</code><button type=\"button\">Copy</button></div>",
+      "css": ".ds-cmd{display:flex;align-items:stretch;border:1px solid #2c2c2a;border-radius:6px;background:#0f0f0e;overflow:hidden} .ds-cmd code{flex:1;min-width:0;padding:12px 14px;font:13px/1.5 ui-monospace,'SF Mono',Menlo,Consolas,monospace;color:#f2f2ed;white-space:pre-wrap;overflow-wrap:anywhere} .ds-cmd button{min-width:76px;padding:0 14px;border:0;border-left:1px solid #2c2c2a;background:#161615;color:#f2f2ed;font:600 13px 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color 160ms cubic-bezier(.16,1,.3,1)} .ds-cmd button:hover{background:#20201e} .ds-cmd button:active{background:#f2f2ed;color:#090909} .ds-cmd button:focus-visible{outline:2px solid #f2f2ed;outline-offset:-2px}"
+    },
+    {
+      "name": "Claude Board",
+      "kind": "card",
+      "refersTo": "claude-board",
+      "description": "The one raised card: pixel total, stats and a week chart.",
+      "html": "<div class=\"ds-board\"><svg viewBox=\"0 0 23 7\" width=\"92\" height=\"28\" shape-rendering=\"crispEdges\" fill=\"#f2f2ed\"><path d=\"M1 0h3v1h-3zM0 1h1v5h-1zM4 1h1v5h-1zM1 6h3v1h-3zM6 0h5v1h-5zM10 1h1v1h-1zM9 2h1v1h-1zM8 3h1v4h-1zM12 0h1v2h-1zM13 1h1v1h-1zM14 0h1v2h-1zM16 0h1v7h-1zM17 3h1v1h-1zM18 2h1v1h-1zM18 4h1v1h-1zM19 1h1v1h-1zM19 5h1v1h-1zM20 0h1v1h-1zM20 6h1v1h-1z\"/></svg><p class=\"ds-cap\">tokens this week</p><div class=\"ds-week\"><i style=\"height:40%\"></i><i style=\"height:70%\"></i><i style=\"height:55%\"></i><i class=\"on\" style=\"height:90%\"></i><i class=\"f\"></i><i class=\"f\"></i><i class=\"f\"></i></div></div>",
+      "css": ".ds-board{padding:32px;border-radius:14px;background:#0e0e0e;border:1px solid #262624;max-width:360px} .ds-cap{margin:12px 0 0;font:14px 'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;color:#8c8c88} .ds-week{display:flex;align-items:flex-end;gap:4px;height:48px;margin-top:28px} .ds-week i{flex:1;background:repeating-linear-gradient(to top,rgba(179,179,173,.75) 0 4px,transparent 4px 6px)} .ds-week i.on{background:repeating-linear-gradient(to top,#f2f2ed 0 4px,transparent 4px 6px)} .ds-week i.f{height:100%;background:repeating-linear-gradient(to top,rgba(38,38,38,.5) 0 4px,transparent 4px 6px)}"
+    },
+    {
+      "name": "Pulse Widget (Compact)",
+      "kind": "custom",
+      "refersTo": "widget-panel",
+      "description": "The product panel: scanlines, pixel header, dotted rule, segmented bars.",
+      "html": "<div class=\"ds-widget\"><div class=\"ds-wh\"><b>PULSE</b><span class=\"ds-scan\"><i class=\"h\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><em>09:41 +</em></div><hr class=\"ds-dot\"><div class=\"ds-cols\"><div><small>CPU</small><b>29%</b><span class=\"ds-bar\" style=\"--v:3\"></span></div><div><small>MEM</small><b>64%</b><span class=\"ds-bar\" style=\"--v:5\"></span></div><div><small>TMP</small><b>46°</b><span class=\"ds-bar\" style=\"--v:2\"></span></div><div><small>DSK</small><b>58%</b><span class=\"ds-bar\" style=\"--v:5\"></span></div></div></div>",
+      "css": ".ds-widget{width:320px;padding:18px;border-radius:14px;background:#090909 repeating-linear-gradient(to bottom,rgba(242,242,237,.02) 0 1px,transparent 1px 3px);box-shadow:inset 0 0 0 1px rgba(242,242,237,.16);color:#f2f2ed;font-family:ui-monospace,Menlo,monospace} .ds-wh{display:flex;align-items:center;gap:8px} .ds-wh b{font-size:15px;letter-spacing:.08em} .ds-wh em{margin-left:auto;font-style:normal;font-size:11px;color:#b3b3ad} .ds-scan{display:flex;gap:2px} .ds-scan i{width:3px;height:3px;background:rgba(242,242,237,.12)} .ds-scan i.h{background:rgba(242,242,237,.9)} .ds-dot{border:0;height:1px;margin:12px 0;background:repeating-linear-gradient(to right,#303030 0 2px,transparent 2px 4px)} .ds-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:12px} .ds-cols small{display:block;font-size:8px;color:#757573;letter-spacing:.08em} .ds-cols b{display:block;margin:6px 0;font-size:15px} .ds-bar{display:block;height:4px;background:linear-gradient(to right,#f2f2ed calc(var(--v)*12.5%),#262626 0);-webkit-mask:repeating-linear-gradient(to right,#000 0 6px,transparent 6px 8px);mask:repeating-linear-gradient(to right,#000 0 6px,transparent 6px 8px)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Lit Pixels on a Dark Panel",
+    "overview": "Pulse is one object drawn the same way everywhere: a near-black panel where information exists only as lit squares. The widget (SwiftUI on macOS, WPF on Windows, canvas on the site) and the marketing page share one palette, one 5×7 glyph table and one set of pixel instruments. A value is either lit, dim or off; there is no colour, no gradient fill, no icon set. Hierarchy comes from pixel scale and brightness, not hue.\n\nThe site treats the widget as the hero and the page as its desktop. Display type is the widget's own font, set at large dot sizes; the real reading text is a quiet grotesk in grey so the pixels stay the loudest thing on screen. Density is generous on the page (big section gaps, one idea per section) and tight inside the widget (18px padding, 14px row rhythm, 1px rules).\n\nMotion is ambient and small: a scanner stepping across the header, a breathing live pixel, a faint CRT band sweeping down, bars tweening a segment at a time. All of it stops under reduced motion, and the Mini size has none at all.",
+    "keyCharacteristics": [
+      "Monochrome: one warm off-white for \"on\", greys for everything else, near-black ground.",
+      "The 5×7 glyph table is the display face on both the widget and the site.",
+      "Segmented bars, pixel sparklines, per-core meters, week charts and dotted rules are the only data marks.",
+      "3px scanlines over every dark surface.",
+      "Real text for content, pixel rendering for display and data."
+    ],
+    "rules": [
+      {
+        "name": "The Lit-or-Not Rule",
+        "body": "State is expressed by brightness alone: on, mid, dim, off. Hot temperature is shown by the last lit segment blinking to off, never by a warning colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Dims Rule",
+        "body": "Ash (pixel-dim) is for pixel ink; Caption Grey (text-dim) is for real small text. Ash fails body-text contrast and must not be promoted to prose.",
+        "section": "colors"
+      },
+      {
+        "name": "The Real-Text-Behind-Pixels Rule",
+        "body": "Every pixel heading carries a visually hidden real-text twin, and the pixel SVG is `aria-hidden`. Pixels are display and data; prose is always real text.",
+        "section": "typography"
+      },
+      {
+        "name": "The Uppercase-Only-In-Pixels Rule",
+        "body": "The glyph table is uppercase; real text is sentence case. Do not uppercase the grotesk to imitate it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Desktop-Objects-Only Rule",
+        "body": "Only things that would float on a real desktop (screens, windows, the widget, menus) cast shadows. Content cards, lists and buttons stay flat.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Scanline Rule",
+        "body": "Every dark surface carries 1px lines every 3px: 1.8% Phosphor White over the whole page (fixed, non-interactive), 2% inside the widget.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** draw every display word and every data mark from the 5×7 glyph table and square cells; keep the 6-column advance and 3-dot line gap.",
+      "**Do** pair each pixel heading with a visually hidden real-text twin and mark the pixels `aria-hidden`.",
+      "**Do** express state through brightness steps (on, mid, dim, off) and the blink-to-off for hot.",
+      "**Do** keep real text in Schibsted Grotesk at Steel Grey for body and Caption Grey for small text; reserve Phosphor White for headings, links, emphasis and lit pixels.",
+      "**Do** lay faint 3px scanlines over dark surfaces and use dotted rules between widget groups.",
+      "**Do** honour reduced motion everywhere: smooth scroll off, no headline assembly, no caret blink, widget loops frozen (scanner parked, pip held at 85%, no sweep).",
+      "**Do** keep focus visible as a 2px Phosphor White outline at 3px offset, hit targets at 40px or more (44px for nav links and phone tabs), and keyboard paths for tabs (arrows) and menus (arrows, Escape).",
+      "**Do** label any simulated widget or chart as synthetic data."
+    ],
+    "donts": [
+      "**Don't** introduce a hue. No accent colour, no red for hot, no green for good.",
+      "**Don't** use Ash (pixel-dim) for real text; it is pixel ink only.",
+      "**Don't** render prose, descriptions or instructions in the pixel font, and don't uppercase the grotesk.",
+      "**Don't** put shadows on content cards, lists or buttons; shadows belong to desktop objects only.",
+      "**Don't** add motion to the Mini size or loops that run under reduced motion.",
+      "**Don't** draw data with anti-aliased curves, gradients or rounded marks; bars, sparklines and meters are square cells."
+    ]
+  }
+}

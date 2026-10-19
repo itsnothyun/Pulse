@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 APP=${APP:-$HOME/Applications/Pulse.app}
-VERSION=${VERSION:-1.0.0}
+VERSION=${VERSION:-1.1.0}
 BIN="$APP/Contents/MacOS/Pulse"
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 FLAGS=(-O -swift-version 5 -parse-as-library)

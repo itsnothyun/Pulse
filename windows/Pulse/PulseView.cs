@@ -63,15 +63,25 @@ sealed class Tweens
     static int Seg(double v, int n) => (int)(Math.Clamp(v, 0, 1) * n * 2);
 }
 
+/// <summary>Three sizes, cycled by clicking the header: everything → the four big numbers → one quiet line.</summary>
+enum WidgetSize { Full, Compact, Mini }
+
+static class WidgetSizeExt
+{
+    public static WidgetSize Next(this WidgetSize s) => s == WidgetSize.Full ? WidgetSize.Compact : s == WidgetSize.Compact ? WidgetSize.Mini : WidgetSize.Full;
+}
+
 /// <summary>The whole widget, drawn as pixel rectangles. The same pass measures layout (dc == null).</summary>
 sealed class PulseView : FrameworkElement
 {
-    public const double W = 320, Pad = 18, Radius = 14;
-    const double Inner = W - Pad * 2;
+    public const double FullW = 320, Pad = 18;
+    const double W = FullW, Inner = W - Pad * 2;
+    const double MiniH = 29, MiniValueW = 4 * 6 * 1.5 - 1.5;    // value slots sized for "100%"
 
     readonly Sampler s;
     readonly Tweens tw = new();
-    bool compact, renderHooked;
+    WidgetSize size;
+    bool renderHooked;
     double lastHeight;
 
     public PulseView(Sampler sampler)
@@ -82,21 +92,27 @@ sealed class PulseView : FrameworkElement
         UseLayoutRounding = true;
     }
 
-    public bool Compact
+    public WidgetSize Size
     {
-        get => compact;
-        set { compact = value; InvalidateMeasure(); InvalidateVisual(); }
+        get => size;
+        set { size = value; InvalidateMeasure(); InvalidateVisual(); }
     }
+
+    bool compact => size == WidgetSize.Compact;
+    public bool IsMini => size == WidgetSize.Mini;
+    public double Radius => IsMini ? 10 : 14;
+    public double PanelWidth => IsMini ? MiniWidth : FullW;
+    static double MiniWidth => 12 + 4 + 3 * 12 + 3 * (PixelFont.Width("CPU", 1) + 5 + MiniValueW) + 12;
 
     /// <summary>Where the overlay loops should sit (set during layout).</summary>
     public Point ScannerPos { get; private set; }
     public Point? PipPos { get; private set; }
     public bool Hot => (s.Temp ?? 0) >= 85;
-    public double HeaderBottom => Pad + 14 + 6;
+    public double HeaderBottom => IsMini ? MiniH : Pad + 14 + 6;
 
     public event Action? LayoutChanged;
 
-    protected override Size MeasureOverride(Size available) => new(W, Paint(null));
+    protected override System.Windows.Size MeasureOverride(System.Windows.Size available) => new(PanelWidth, Paint(null));
 
     protected override void OnRender(DrawingContext dc)
     {
@@ -211,20 +227,52 @@ sealed class PulseView : FrameworkElement
 
     double Paint(DrawingContext? dc)
     {
-        double h = compact ? PaintCompact(null) : PaintFull(null);
+        double h = Body(null);
         if (dc == null) return h;
+        double w = PanelWidth, r = Radius;
 
-        var shape = new RectangleGeometry(new Rect(0, 0, W, h), Radius, Radius);
+        var shape = new RectangleGeometry(new Rect(0, 0, w, h), r, r);
         dc.PushClip(shape);
-        dc.DrawRectangle(Ink.Bg, null, new Rect(0, 0, W, h));
+        dc.DrawRectangle(Ink.Bg, null, new Rect(0, 0, w, h));
         var lines = new StreamGeometry();                         // faint static scanlines
-        using (var c = lines.Open()) for (double y = 0; y < h; y += 3) PixelFont.AddRect(c, 0, y, W, 1);
+        using (var c = lines.Open()) for (double y = 0; y < h; y += 3) PixelFont.AddRect(c, 0, y, w, 1);
         lines.Freeze();
         dc.DrawGeometry(Ink.Alpha(Ink.On, 0.02), null, lines);
-        if (compact) PaintCompact(dc); else PaintFull(dc);
+        Body(dc);
         dc.Pop();
-        dc.DrawRoundedRectangle(null, new Pen(Ink.Alpha(Ink.On, 0.16), 1), new Rect(0.5, 0.5, W - 1, h - 1), Radius, Radius);
+        dc.DrawRoundedRectangle(null, new Pen(Ink.Alpha(Ink.On, 0.16), 1), new Rect(0.5, 0.5, w - 1, h - 1), r, r);
         return h;
+    }
+
+    double Body(DrawingContext? dc) => size switch
+    {
+        WidgetSize.Compact => PaintCompact(dc),
+        WidgetSize.Mini => PaintMini(dc),
+        _ => PaintFull(dc),
+    };
+
+    /// <summary>One quiet line: no scanner, no sweep. Only a running-hot temperature blinks.</summary>
+    double PaintMini(DrawingContext? dc)
+    {
+        PipPos = null;
+        ScannerPos = new Point(-100, -100);
+        double t = s.Temp ?? 0, x = 12, y = (MiniH - 10.5) / 2;
+        Rect(dc, Ink.Alpha(Ink.On, 0.85), x, (MiniH - 4) / 2, 4, 4);
+        x += 4 + 12;
+        (string Label, string Value, bool Blink)[] items =
+        {
+            ("CPU", F.Pct(s.Cpu), false),
+            ("MEM", F.Pct(s.MemUsed / s.MemTotal), false),
+            ("TMP", s.Temp == null ? "N/A" : $"{Math.Round(t)}°", Hot),
+        };
+        foreach (var it in items)
+        {
+            Text(dc, it.Label, x, y + 1.75, 1, Ink.Dim);
+            x += PixelFont.Width(it.Label, 1) + 5;
+            TextR(dc, it.Value, x + MiniValueW, y, 1.5, it.Blink && s.Tick ? Ink.Off : Ink.On);   // fixed slot: digits never shift the window
+            x += MiniValueW + 12;
+        }
+        return MiniH;
     }
 
     double Header(DrawingContext? dc, double y)
