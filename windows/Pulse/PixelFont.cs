@@ -38,6 +38,8 @@ static class Ink
 /// <summary>5×7 bitmap font drawn as squares — no system fonts involved.</summary>
 static partial class PixelFont
 {
+    public static bool Has(char c) => Glyphs.ContainsKey(c);
+
     static readonly Dictionary<(string, double), Geometry> cache = new();
 
     public static double Width(string s, double scale) => Math.Max(s.Length * 6 - 1, 0) * scale;

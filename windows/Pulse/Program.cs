@@ -15,7 +15,11 @@ public static class Program
     {
         int i = Array.IndexOf(args, "--snapshot");
         if (i >= 0 && i + 1 < args.Length)
-            return Snapshot(args[i + 1], args.Contains("--mini") ? WidgetSize.Mini : args.Contains("--compact") ? WidgetSize.Compact : WidgetSize.Full, args.Contains("--demo"));
+        {
+            int t = Array.IndexOf(args, "--top");
+            TopMode? top = t >= 0 && t + 1 < args.Length ? (args[t + 1] == "mem" ? TopMode.Mem : TopMode.Cpu) : null;
+            return Snapshot(args[i + 1], args.Contains("--mini") ? WidgetSize.Mini : args.Contains("--compact") ? WidgetSize.Compact : WidgetSize.Full, args.Contains("--demo"), top);
+        }
 
         using var single = new Mutex(true, "Pulse.Widget.SingleInstance", out bool first);
         if (!first) return 0;                     // already running
@@ -25,14 +29,15 @@ public static class Program
     }
 
     /// <summary>Renders the widget to a PNG without opening a window (debug aid, used by CI).</summary>
-    static int Snapshot(string path, WidgetSize size, bool demo)
+    static int Snapshot(string path, WidgetSize size, bool demo, TopMode? top)
     {
         var s = new Sampler(start: false);
-        if (demo) s.LoadDemo();
+        if (demo) { if (top is { } dm) s.TopSync(dm); s.LoadDemo(); }
         else
         {
             for (int k = 0; k < 15; k++) { Thread.Sleep(100); s.Sample(); }
             s.ProbeSync();
+            if (top is { } m) s.TopSync(m);
         }
         var v = new PulseView(s) { Size = size };
         v.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));

@@ -48,6 +48,7 @@ let glyphs: [Character: [UInt8]] = [
     "+": [0,0x04,0x04,0x1F,0x04,0x04,0], "·": [0,0,0,0x04,0,0,0], "!": [0x04,0x04,0x04,0x04,0x04,0,0x04],
     "↑": [0x04,0x0E,0x15,0x04,0x04,0x04,0x04], "↓": [0x04,0x04,0x04,0x04,0x15,0x0E,0x04],
     "⚡": [0x02,0x04,0x08,0x1F,0x02,0x04,0x08],
+    "$": [0x04,0x0F,0x14,0x0E,0x05,0x1E,0x04], "~": [0,0,0x08,0x15,0x02,0,0],
 ]
 
 struct PixelText: View {
@@ -497,6 +498,29 @@ enum Probe {
         return nil
     }
 
+    /// Heaviest processes, grouped by name. `ps` is setuid, so it sees system processes too;
+    /// it only runs while a list is open.
+    static func top(_ mode: TopMode) -> [TopProc] {
+        let p = Process(), pipe = Pipe()
+        p.executableURL = URL(fileURLWithPath: "/bin/ps")
+        p.arguments = ["-Aceo", "pcpu=,rss=,comm="]
+        p.standardOutput = pipe; p.standardError = FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return [] }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        p.waitUntilExit()
+        var by: [String: (cpu: Double, mem: Double)] = [:]
+        for line in String(decoding: data, as: UTF8.self).split(separator: "\n") {
+            let f = line.split(separator: " ", maxSplits: 2)
+            guard f.count == 3, let cpu = Double(f[0]), let rss = Double(f[1]) else { continue }
+            let name = f[2].trimmingCharacters(in: .whitespaces)
+            guard name != "ps" else { continue }
+            by[name, default: (0, 0)].cpu += cpu
+            by[name, default: (0, 0)].mem += rss * 1024
+        }
+        return by.map { TopProc(name: $0.key, value: mode == .cpu ? $0.value.cpu : $0.value.mem) }
+            .sorted { $0.value > $1.value }.prefix(3).map { $0 }
+    }
+
     static func load() -> Double { var l = [Double](repeating: 0, count: 3); getloadavg(&l, 3); return l[0] }
 }
 
@@ -504,7 +528,9 @@ enum Probe {
 
 struct ClaudeStats {
     var week = 0.0, input = 0.0, output = 0.0, cacheWrite = 0.0, cacheRead = 0.0
-    var today = 0.0, window5h = 0.0
+    var today = 0.0
+    var cost = 0.0                     // estimated USD at API list prices
+    var block = 0.0, blockEnd = 0.0    // tokens in the current 5-hour block, and when it resets (0 = no block open)
     var sessions = 0, live = 0, calls = 0
     var days = [Double](repeating: 0, count: 7)
     var todayIndex = 0
@@ -514,7 +540,17 @@ struct ClaudeStats {
 /// Incremental tally of this week's tokens across every Claude Code session on this Mac.
 /// Each pass reads only bytes appended since the last pass; API calls are de-duplicated by message+request id.
 final class ClaudeUsage {
-    private struct Event { let ts: Double; let input, output, cw, cr: Double; let session: String }
+    private struct Event { let ts: Double; let input, output, cw, cr, cost: Double; let session: String }
+
+    /// Estimated API list price in USD per million tokens: input, output, cache write, cache read.
+    /// First match wins; unknown models count as free. Edit when prices change.
+    static let prices: [(String, [Double])] = [
+        ("fable", [10, 50, 12.5, 1]),
+        ("opus-5", [4, 20, 5, 0.4]), ("opus-4-5", [5, 25, 6.25, 0.5]), ("opus", [15, 75, 18.75, 1.5]),
+        ("sonnet-5", [2, 10, 2.5, 0.1]), ("sonnet", [3, 15, 3.75, 0.3]),
+        ("haiku-5", [0.1, 0.5, 0.125, 0.01]), ("haiku-4", [1, 5, 1.25, 0.1]), ("haiku", [0.8, 4, 1, 0.08]),
+    ]
+    static func price(_ model: String) -> [Double] { prices.first { model.contains($0.0) }?.1 ?? [0, 0, 0, 0] }
     private let q = DispatchQueue(label: "pulse.claude", qos: .utility)
     private var offsets: [String: UInt64] = [:]
     private var seen = Set<String>()
@@ -563,8 +599,10 @@ final class ClaudeUsage {
         guard close > open, seen.insert(key).inserted,
               let u = try? JSONSerialization.jsonObject(with: Data(UnsafeRawBufferPointer(rebasing: line[open...close]))) as? [String: Any] else { return }
         func n(_ k: String) -> Double { (u[k] as? NSNumber)?.doubleValue ?? 0 }
-        events.append(Event(ts: ts, input: n("input_tokens"), output: n("output_tokens"),
-                            cw: n("cache_creation_input_tokens"), cr: n("cache_read_input_tokens"),
+        let (i, o, cw, cr) = (n("input_tokens"), n("output_tokens"), n("cache_creation_input_tokens"), n("cache_read_input_tokens"))
+        let p = Self.price(Self.field(line, "\"model\":\"") ?? "")
+        events.append(Event(ts: ts, input: i, output: o, cw: cw, cr: cr,
+                            cost: (i * p[0] + o * p[1] + cw * p[2] + cr * p[3]) / 1e6,
                             session: Self.field(line, "\"sessionId\":\"") ?? ""))
     }
 
@@ -615,23 +653,33 @@ final class ClaudeUsage {
 
         var st = ClaudeStats(); st.ready = true; st.live = live; st.calls = events.count
         let dayStart = cal.startOfDay(for: now).timeIntervalSince1970
-        let win = now.timeIntervalSince1970 - 5 * 3600
         var sessions = Set<String>()
         for e in events {
             let t = e.input + e.output + e.cw + e.cr
             st.week += t; st.input += e.input; st.output += e.output; st.cacheWrite += e.cw; st.cacheRead += e.cr
+            st.cost += e.cost
             if e.ts >= dayStart { st.today += t }
-            if e.ts >= win { st.window5h += t }
             st.days[min(max(Int((e.ts - ws) / 86400), 0), 6)] += t
             sessions.insert(e.session)
         }
         st.sessions = sessions.count
+
+        // 5-hour blocks: one opens at the hour of the first message after the last block ran out.
+        var bStart = -Double.infinity, bTok = 0.0
+        for (ts, t) in events.map({ ($0.ts, $0.input + $0.output + $0.cw + $0.cr) }).sorted(by: { $0.0 < $1.0 }) {
+            if ts >= bStart + 5 * 3600 { bStart = (ts / 3600).rounded(.down) * 3600; bTok = 0 }
+            bTok += t
+        }
+        if now.timeIntervalSince1970 < bStart + 5 * 3600 { st.block = bTok; st.blockEnd = bStart + 5 * 3600 }
         st.todayIndex = min(max(Int((dayStart - ws) / 86400 + 0.5), 0), 6)
         return st
     }
 }
 
 // MARK: - Sampler
+
+enum TopMode { case cpu, mem }
+struct TopProc { let name: String; let value: Double }
 
 @MainActor
 final class Sampler: ObservableObject {
@@ -655,6 +703,10 @@ final class Sampler: ObservableObject {
     @Published var clock = ""
     @Published var hist: [String: [Double]] = [:]
     @Published var claude = ClaudeStats()
+    @Published var top: [TopProc] = []
+    @Published var topMode: TopMode? { didSet { top = []; refreshTop(); onTopChange?() } }
+    var onTopChange: (() -> Void)?
+    private var topBusy = false
     let claudeUsage = ClaudeUsage()
 
     let perfCores = { var v: Int32 = 0; var s = 4; sysctlbyname("hw.perflevel0.logicalcpu", &v, &s, nil, 0); return Int(v) }()
@@ -678,6 +730,20 @@ final class Sampler: ObservableObject {
         timer?.tolerance = 0.2
     }
 
+    func refreshTop() {
+        guard let m = topMode, !topBusy else { return }
+        if snapshotMode { top = Probe.top(m); return }
+        topBusy = true
+        probeQ.async {
+            let r = Probe.top(m)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                topBusy = false
+                if topMode == m { top = r }
+            }
+        }
+    }
+
     private func push(_ key: String, _ v: Double) {
         var a = hist[key] ?? []; a.append(min(max(v, 0), 1)); if a.count > 40 { a.removeFirst() }; hist[key] = a
     }
@@ -699,7 +765,8 @@ final class Sampler: ObservableObject {
         swapUsed = 1.2e9; swapTotal = 2.1e9
         battery = (86, true, true); load = 2.4; clock = "09:41"
         var c = ClaudeStats()
-        c.ready = true; c.week = 412.6e6; c.today = 58.3e6; c.window5h = 31.9e6; c.output = 2.41e6
+        c.ready = true; c.week = 412.6e6; c.today = 58.3e6; c.block = 31.9e6; c.output = 2.41e6
+        c.cost = 184.2; c.blockEnd = Date().timeIntervalSince1970 + 2 * 3600 + 14 * 60 + 30
         c.input = 9.8e6; c.cacheRead = 400.4e6; c.sessions = 9; c.live = 1; c.calls = 3184; c.todayIndex = 3
         c.days = [88e6, 102e6, 164e6, 58.3e6, 0, 0, 0]
         claude = c
@@ -758,6 +825,7 @@ final class Sampler: ObservableObject {
         if n % 10 == 0 { battery = Probe.battery() }
         thermalState = ProcessInfo.processInfo.thermalState
         if n % 20 == 0 { claudeUsage.refresh { [weak self] in self?.claude = $0 } }
+        if n % 2 == 0 { refreshTop() }
         n += 1
     }
 }
@@ -777,6 +845,20 @@ enum F {
     static func tok(_ v: Double) -> String {
         v >= 1e9 ? String(format: "%.2fB", v / 1e9) : v >= 1e6 ? String(format: "%.1fM", v / 1e6)
             : v >= 1e3 ? String(format: "%.0fK", v / 1e3) : String(format: "%.0f", v)
+    }
+    static func usd(_ v: Double) -> String {
+        v < 100 ? String(format: "$%.2f", v) : v < 10_000 ? String(format: "$%.0f", v) : String(format: "$%.1fK", v / 1e3)
+    }
+    static func mem(_ b: Double) -> String { b >= 1e9 ? String(format: "%.1fG", b / 1e9) : String(format: "%.0fM", b / 1e6) }
+    static func countdown(_ s: Double) -> String {
+        let m = Int((s / 60).rounded(.up)), h = m / 60
+        return h > 0 ? "\(h)H \(m % 60)M" : "\(m)M"
+    }
+    /// Process names in the pixel font: reverse-DNS names keep their last part, unknown characters become spaces.
+    static func procName(_ n: String) -> String {
+        var s = n
+        if s.filter({ $0 == "." }).count >= 2, let last = s.split(separator: ".").last { s = String(last) }
+        return String(s.uppercased().map { glyphs[$0] != nil ? $0 : " " }.prefix(20))
     }
     static func uptime() -> String {
         let s = Int(ProcessInfo.processInfo.systemUptime)
@@ -816,6 +898,30 @@ struct HeroRow<Meter: View>: View {
                     .frame(width: 70, alignment: .trailing)
             }
             meter
+        }
+    }
+}
+
+/// The three heaviest processes, shown under CPU or MEM after a click.
+struct TopList: View {
+    let items: [TopProc]
+    let mode: TopMode
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(0..<3, id: \.self) { i in
+                HStack(spacing: 8) {
+                    PixelText(text: "\(i + 1)", scale: 1, color: Ink.dim)
+                    if i < items.count {
+                        let p = items[i]
+                        PixelText(text: F.procName(p.name), scale: 1, color: Ink.mid)
+                        Spacer(minLength: 0)
+                        PixelText(text: mode == .cpu ? "\(Int(p.value.rounded()))%" : F.mem(p.value), scale: 1)
+                    } else {
+                        PixelText(text: i == 0 ? "READING" : "-", scale: 1, color: Ink.off)
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
         }
     }
 }
@@ -897,11 +1003,19 @@ struct WidgetView: View {
                     value: s.cpu * 100, format: { "\(Int($0.rounded()))%" }, history: s.hist["cpu"] ?? []) {
                 CoreGrid(cores: s.cores, perfCount: s.perfCores)
             }
+            .contentShape(Rectangle())
+            .onTapGesture { s.topMode = s.topMode == .cpu ? nil : .cpu }
+            .help("Click for the busiest processes")
+            if s.topMode == .cpu { TopList(items: s.top, mode: .cpu) }
             DottedRule()
             HeroRow(label: "MEM", detail: "\(F.gib(s.memUsed)) / \(F.gib(s.memTotal)) GB",
                     value: memF * 100, format: { "\(Int($0.rounded()))%" }, history: s.hist["mem"] ?? []) {
                 PixelBar(value: memF).animation(tween, value: seg(memF))
             }
+            .contentShape(Rectangle())
+            .onTapGesture { s.topMode = s.topMode == .mem ? nil : .mem }
+            .help("Click for the processes using the most memory")
+            if s.topMode == .mem { TopList(items: s.top, mode: .mem) }
             DottedRule()
             HeroRow(label: "TMP", detail: s.maxTemp.map { "\(tempState(t)) · PEAK \(Int($0.rounded()))°" } ?? tempState(t),
                     value: t, format: { s.cpuTemp == nil ? "N/A" : "\(Int($0.rounded()))°" }, history: s.hist["tmp"] ?? []) {
@@ -952,6 +1066,7 @@ struct WidgetView: View {
 
     var claudeSection: some View {
         let c = s.claude
+        let left = max(c.blockEnd - Date().timeIntervalSince1970, 0)
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
                 PixelText(text: "CLAUDE CODE", scale: 2)
@@ -969,14 +1084,19 @@ struct WidgetView: View {
             }
             HStack(alignment: .top, spacing: 8) {
                 Stat(label: "TODAY", value: F.tok(c.today))
-                Stat(label: "LAST 5H", value: F.tok(c.window5h))
-                Stat(label: "OUTPUT", value: F.tok(c.output))
+                Stat(label: "5H BLOCK", value: F.tok(left > 0 ? c.block : 0))
+                Stat(label: "EST. COST", value: F.usd(c.cost))
                 Stat(label: "SESSIONS", value: "\(c.sessions)")
             }
             HStack {
-                PixelText(text: "IN \(F.tok(c.input + c.cacheWrite)) · CACHED \(F.tok(c.cacheRead))", scale: 1, color: Ink.dim)
+                PixelText(text: "IN \(F.tok(c.input + c.cacheWrite)) · OUT \(F.tok(c.output)) · CACHED \(F.tok(c.cacheRead))", scale: 1, color: Ink.dim)
                 Spacer()
                 PixelText(text: "\(c.calls) CALLS", scale: 1, color: Ink.dim)
+            }
+            HStack(spacing: 10) {
+                PixelText(text: left > 0 ? "RESETS IN \(F.countdown(left))" : "NO 5H BLOCK OPEN", scale: 1, color: left > 0 ? Ink.mid : Ink.dim)
+                Spacer(minLength: 0)
+                PixelBar(value: left > 0 ? 1 - left / (5 * 3600) : 0, segments: 20, height: 3).frame(width: 118)
             }
         }
     }
@@ -1030,10 +1150,11 @@ struct WidgetView: View {
             }
             DottedRule()
             HStack(spacing: 6) {
-                if s.claude.live > 0 { LivePip() }
-                PixelText(text: "CLAUDE \(F.tok(s.claude.week)) WK", scale: 1, color: Ink.mid)
+                let c = s.claude, left = c.blockEnd - Date().timeIntervalSince1970
+                if c.live > 0 { LivePip() }
+                PixelText(text: "CLAUDE \(F.tok(c.week)) · ~\(F.usd(c.cost))", scale: 1, color: Ink.mid)
                 Spacer()
-                PixelText(text: "TODAY \(F.tok(s.claude.today))", scale: 1, color: Ink.dim)
+                PixelText(text: left > 0 ? "RESETS \(F.countdown(left))" : "TODAY \(F.tok(c.today))", scale: 1, color: Ink.dim)
             }
         }
     }
@@ -1095,6 +1216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hidesOnDeactivate = false
         prefs.apply = { [weak self] in self?.applyLevel() }
         prefs.resize = { [weak self] in DispatchQueue.main.async { self?.fit(animate: true) } }
+        sampler.onTopChange = prefs.resize
         applyLevel()
         if panel.setFrameUsingName("Pulse") {
             fit(animate: false)
@@ -1135,6 +1257,11 @@ enum PulseApp {
                 if args.contains("--demo") { s.loadDemo() } else {
                     s.claude = s.claudeUsage.scanSync()
                     if let th = Thermals().read() { s.cpuTemp = th.cpu; s.maxTemp = th.max }; s.gpu = Probe.gpu()
+                }
+                if let t = args.firstIndex(of: "--top"), t + 1 < args.count { s.topMode = args[t + 1] == "mem" ? .mem : .cpu }
+                if args.contains("--demo"), let m = s.topMode {
+                    s.top = m == .cpu ? [TopProc(name: "Xcode", value: 61), TopProc(name: "Safari", value: 23), TopProc(name: "WindowServer", value: 14)]
+                                      : [TopProc(name: "Xcode", value: 3.1e9), TopProc(name: "Safari", value: 1.8e9), TopProc(name: "claude", value: 0.9e9)]
                 }
                 let p = Prefs(); p.size = args.contains("--mini") ? .mini : args.contains("--compact") ? .compact : .full
                 let r = ImageRenderer(content: WidgetView(s: s, prefs: p)); r.scale = 2

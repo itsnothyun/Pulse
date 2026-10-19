@@ -29,7 +29,8 @@ Sits on the desktop beside an editor, terminal or browser all day. Drag to place
 ## Capabilities and Constraints
 
 - Metrics: CPU total + per-core meters, memory, temperature (Apple Silicon SoC sensors; ACPI thermal zone on Windows, may be N/A), disk, GPU, network up/down, swap (macOS) / commit (Windows), battery/power, uptime.
-- Claude Code: tokens this week (Mon–Sun), today, last 5 h, output, sessions, live sessions, calls, cached vs new input. Claude Code only; cannot see the Claude desktop/web apps or plan limits.
+- Claude Code: tokens this week (Mon–Sun), today, current 5-hour block with reset countdown, estimated API-rate cost, output, sessions, live sessions, calls, cached vs new input.
+- Click CPU or MEM (Full size) for the three heaviest processes. Claude Code only; cannot see the Claude desktop/web apps or plan limits.
 - Idles at a few percent CPU; loop animations run on the compositor; respects reduced motion.
 - macOS 13+ (universal), Windows 10/11 x64. Free, MIT licensed, open source.
 - Not decided: custom domain, code signing/notarization, a paid tier (none planned).

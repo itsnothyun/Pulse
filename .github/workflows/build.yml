@@ -32,6 +32,9 @@ jobs:
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-compact.png','--demo','--compact' -Wait
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-mini.png','--demo','--mini' -Wait
           if (-not (Test-Path snapshot-windows-mini.png)) { throw "mini snapshot failed" }
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-top-cpu.png','--top','cpu' -Wait
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-top-mem.png','--top','mem' -Wait
+          if (-not (Test-Path snapshot-windows-top-mem.png)) { throw "top snapshot failed" }
           Compress-Archive -Path out/Pulse.exe -DestinationPath Pulse-windows-x64.zip
       - uses: actions/upload-artifact@v4
         with:
@@ -52,6 +55,7 @@ jobs:
         run: |
           dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos.png --demo
           dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-mini.png --demo --mini
+          dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-top.png --top cpu
       - name: Zip
         run: ditto -c -k --keepParent dist/Pulse.app Pulse-macos-universal.zip
       - uses: actions/upload-artifact@v4

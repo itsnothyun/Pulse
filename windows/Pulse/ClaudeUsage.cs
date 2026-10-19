@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -9,7 +10,9 @@ namespace PulseApp;
 
 sealed class ClaudeStats
 {
-    public double Week, Input, Output, CacheWrite, CacheRead, Today, Window5h;
+    public double Week, Input, Output, CacheWrite, CacheRead, Today;
+    public double Cost;                  // estimated USD at API list prices
+    public double Block, BlockEnd;       // tokens in the current 5-hour block, and when it resets (unix s, 0 = none)
     public int Sessions, Live, Calls, TodayIndex;
     public double[] Days = new double[7];
     public bool Ready;
@@ -22,7 +25,26 @@ sealed class ClaudeStats
 /// </summary>
 sealed class ClaudeUsage
 {
-    readonly record struct Event(double Ts, double Input, double Output, double Cw, double Cr, string Session);
+    readonly record struct Event(double Ts, double Input, double Output, double Cw, double Cr, double Cost, string Session);
+
+    /// <summary>
+    /// Estimated API list price in USD per million tokens: input, output, cache write, cache read.
+    /// First match wins; unknown models count as free. Edit when prices change.
+    /// </summary>
+    static readonly (string Model, double[] Price)[] Prices =
+    {
+        ("fable", new[] { 10, 50, 12.5, 1 }),
+        ("opus-5", new[] { 4, 20, 5, 0.4 }), ("opus-4-5", new[] { 5, 25, 6.25, 0.5 }), ("opus", new[] { 15, 75, 18.75, 1.5 }),
+        ("sonnet-5", new[] { 2, 10, 2.5, 0.1 }), ("sonnet", new[] { 3, 15, 3.75, 0.3 }),
+        ("haiku-5", new[] { 0.1, 0.5, 0.125, 0.01 }), ("haiku-4", new[] { 1, 5, 1.25, 0.1 }), ("haiku", new[] { 0.8, 4, 1, 0.08 }),
+    };
+    static readonly double[] Free = { 0, 0, 0, 0 };
+
+    static double[] Price(string model)
+    {
+        foreach (var (m, p) in Prices) if (model.Contains(m, StringComparison.Ordinal)) return p;
+        return Free;
+    }
 
     readonly Dictionary<string, long> offsets = new();
     readonly HashSet<string> seen = new();
@@ -35,6 +57,7 @@ sealed class ClaudeUsage
     static ReadOnlySpan<byte> IdKey => "\"id\":\"msg_"u8;
     static ReadOnlySpan<byte> ReqKey => "\"requestId\":\""u8;
     static ReadOnlySpan<byte> SessionKey => "\"sessionId\":\""u8;
+    static ReadOnlySpan<byte> ModelKey => "\"model\":\""u8;
 
     static string Root()
     {
@@ -73,18 +96,28 @@ sealed class ClaudeUsage
 
         var st = new ClaudeStats { Ready = true, Live = live, Calls = events.Count, TodayIndex = sinceMonday };
         double dayStart = new DateTimeOffset(now.Date, now.Offset).ToUnixTimeMilliseconds() / 1000.0;
-        double win = now.ToUnixTimeMilliseconds() / 1000.0 - 5 * 3600;
         var sessions = new HashSet<string>();
         foreach (var e in events)
         {
             double t = e.Input + e.Output + e.Cw + e.Cr;
             st.Week += t; st.Input += e.Input; st.Output += e.Output; st.CacheWrite += e.Cw; st.CacheRead += e.Cr;
+            st.Cost += e.Cost;
             if (e.Ts >= dayStart) st.Today += t;
-            if (e.Ts >= win) st.Window5h += t;
             st.Days[Math.Clamp((int)((e.Ts - ws) / 86400), 0, 6)] += t;
             sessions.Add(e.Session);
         }
         st.Sessions = sessions.Count;
+
+        // 5-hour blocks: one opens at the hour of the first message after the last block ran out.
+        const double Five = 5 * 3600;
+        double bStart = double.NegativeInfinity, bTok = 0;
+        var ordered = events.Select(e => (e.Ts, T: e.Input + e.Output + e.Cw + e.Cr)).OrderBy(e => e.Ts);
+        foreach (var (ts, t) in ordered)
+        {
+            if (ts >= bStart + Five) { bStart = Math.Floor(ts / 3600) * 3600; bTok = 0; }
+            bTok += t;
+        }
+        if (now.ToUnixTimeMilliseconds() / 1000.0 < bStart + Five) { st.Block = bTok; st.BlockEnd = bStart + Five; }
         return st;
     }
 
@@ -163,9 +196,9 @@ sealed class ClaudeUsage
             using var doc = JsonDocument.Parse(line[open..(close + 1)].ToArray());
             var r = doc.RootElement;
             double N(string k) => r.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : 0;
-            events.Add(new Event(ts, N("input_tokens"), N("output_tokens"),
-                                 N("cache_creation_input_tokens"), N("cache_read_input_tokens"),
-                                 Field(line, SessionKey) ?? ""));
+            double i = N("input_tokens"), o = N("output_tokens"), cw = N("cache_creation_input_tokens"), cr = N("cache_read_input_tokens");
+            var p = Price(Field(line, ModelKey) ?? "");
+            events.Add(new Event(ts, i, o, cw, cr, (i * p[0] + o * p[1] + cw * p[2] + cr * p[3]) / 1e6, Field(line, SessionKey) ?? ""));
         }
         catch (JsonException) { }
     }

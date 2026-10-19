@@ -78,17 +78,21 @@ sealed class WidgetWindow : Window
 
     void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
-        var inHeader = e.GetPosition(view).Y < view.HeaderBottom;
+        double y = e.GetPosition(view).Y;
+        bool inHeader = y < view.HeaderBottom;
+        var row = view.RowAt(y);
         double l = Left, t = Top;
         try { DragMove(); } catch (InvalidOperationException) { }
         if (Math.Abs(Left - l) > 2 || Math.Abs(Top - t) > 2) SavePosition();
         else if (inHeader) SetSize(view.Size.Next());   // a click (not a drag) on the header changes size
+        else if (row is { } r) sampler.TopMode = sampler.TopMode == r ? null : r;   // on CPU or MEM: top processes
     }
 
     readonly System.Collections.Generic.Dictionary<WidgetSize, MenuItem> sizeItems = new();
 
     void SetSize(WidgetSize size)
     {
+        if (size != WidgetSize.Full) sampler.TopMode = null;
         view.Size = size;
         settings.WidgetSize = size;
         settings.Save();

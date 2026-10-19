@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -20,6 +21,21 @@ static class F
     public static string Tok(double v) =>
         v >= 1e9 ? (v / 1e9).ToString("0.00", C) + "B" : v >= 1e6 ? (v / 1e6).ToString("0.0", C) + "M"
         : v >= 1e3 ? (v / 1e3).ToString("0", C) + "K" : v.ToString("0", C);
+    public static string Usd(double v) =>
+        v < 100 ? "$" + v.ToString("0.00", C) : v < 10000 ? "$" + v.ToString("0", C) : "$" + (v / 1e3).ToString("0.0", C) + "K";
+    public static string Mem(double b) => b >= 1e9 ? (b / 1e9).ToString("0.0", C) + "G" : (b / 1e6).ToString("0", C) + "M";
+    public static string Countdown(double s)
+    {
+        int m = (int)Math.Ceiling(s / 60), h = m / 60;
+        return h > 0 ? $"{h}H {m % 60}M" : $"{m}M";
+    }
+    /// <summary>Process names in the pixel font: unknown characters become spaces.</summary>
+    public static string ProcName(string n)
+    {
+        var chars = n.ToUpperInvariant().Select(c => PixelFont.Has(c) ? c : ' ').Take(20).ToArray();
+        return new string(chars);
+    }
+    public static double Now => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
     public static string Uptime()
     {
         long s = Environment.TickCount64 / 1000;
@@ -111,6 +127,32 @@ sealed class PulseView : FrameworkElement
     public double HeaderBottom => IsMini ? MiniH : Pad + 14 + 6;
 
     public event Action? LayoutChanged;
+
+    /// <summary>Vertical extent of the CPU and MEM rows in Full size; a click there opens the top-process list.</summary>
+    (double Top, double Bottom) cpuRow, memRow;
+
+    public TopMode? RowAt(double y) =>
+        size != WidgetSize.Full ? null
+        : y >= cpuRow.Top && y <= cpuRow.Bottom ? PulseApp.TopMode.Cpu
+        : y >= memRow.Top && y <= memRow.Bottom ? PulseApp.TopMode.Mem : null;
+
+    double TopList(DrawingContext? dc, double y, TopMode mode)
+    {
+        y += 14;
+        for (int i = 0; i < 3; i++)
+        {
+            double ry = y + i * 13;
+            Text(dc, (i + 1).ToString(), Pad, ry, 1, Ink.Dim);
+            if (i < s.Top.Count)
+            {
+                var p = s.Top[i];
+                Text(dc, F.ProcName(p.Name), Pad + 14, ry, 1, Ink.Mid);
+                TextR(dc, mode == PulseApp.TopMode.Cpu ? $"{Math.Round(p.Value)}%" : F.Mem(p.Value), W - Pad, ry, 1, Ink.On);
+            }
+            else Text(dc, i == 0 ? "READING" : "-", Pad + 14, ry, 1, Ink.Off);
+        }
+        return y + 2 * 13 + 7;
+    }
 
     protected override System.Windows.Size MeasureOverride(System.Windows.Size available) => new(PanelWidth, Paint(null));
 
@@ -320,13 +362,21 @@ sealed class PulseView : FrameworkElement
         double memF = s.MemUsed / s.MemTotal, diskF = s.DiskUsed / s.DiskTotal;
         double t = s.Temp ?? 0, tempF = (t - 30) / 70;
 
+        double y0 = y;
         y = Hero(dc, y, "CPU", $"{s.Cores.Length} CORES · {s.Procs} PROCS", F.Pct(s.Cpu), s.History("cpu"));
         CoreGrid(dc, Pad, y, Inner, s.Cores);
-        y = Rule(dc, y + 15);
+        y += 15;
+        cpuRow = (y0 - 7, y + 7);
+        if (s.TopMode == PulseApp.TopMode.Cpu) y = TopList(dc, y, PulseApp.TopMode.Cpu);
+        y = Rule(dc, y);
 
+        y0 = y;
         y = Hero(dc, y, "MEM", $"{F.Gib(s.MemUsed)} / {F.Gib(s.MemTotal)} GB", F.Pct(memF), s.History("mem"));
         Bar(dc, "mem", Pad, y, Inner, 8, memF);
-        y = Rule(dc, y + 8);
+        y += 8;
+        memRow = (y0 - 7, y + 7);
+        if (s.TopMode == PulseApp.TopMode.Mem) y = TopList(dc, y, PulseApp.TopMode.Mem);
+        y = Rule(dc, y);
 
         string tDetail = s.TempMax is { } mx ? $"{TempState(t)} · PEAK {Math.Round(mx)}°" : TempState(t);
         y = Hero(dc, y, "TMP", tDetail, s.Temp == null ? "N/A" : $"{Math.Round(t)}°", s.History("tmp"));
@@ -376,8 +426,9 @@ sealed class PulseView : FrameworkElement
         WeekChart(dc, W - Pad - 112, y, 112, c.Days, c.TodayIndex);
         y += 35 + 12;
 
+        double left = Math.Max(c.BlockEnd - F.Now, 0);
         double cw = (Inner - 3 * 8) / 4;
-        (string, string)[] stats = { ("TODAY", F.Tok(c.Today)), ("LAST 5H", F.Tok(c.Window5h)), ("OUTPUT", F.Tok(c.Output)), ("SESSIONS", c.Sessions.ToString()) };
+        (string, string)[] stats = { ("TODAY", F.Tok(c.Today)), ("5H BLOCK", F.Tok(left > 0 ? c.Block : 0)), ("EST. COST", F.Usd(c.Cost)), ("SESSIONS", c.Sessions.ToString()) };
         for (int i = 0; i < stats.Length; i++)
         {
             Text(dc, stats[i].Item1, Pad + i * (cw + 8), y, 1, Ink.Dim);
@@ -385,8 +436,12 @@ sealed class PulseView : FrameworkElement
         }
         y += 23 + 12;
 
-        Text(dc, $"IN {F.Tok(c.Input + c.CacheWrite)} · CACHED {F.Tok(c.CacheRead)}", Pad, y, 1, Ink.Dim);
+        Text(dc, $"IN {F.Tok(c.Input + c.CacheWrite)} · OUT {F.Tok(c.Output)} · CACHED {F.Tok(c.CacheRead)}", Pad, y, 1, Ink.Dim);
         TextR(dc, $"{c.Calls} CALLS", W - Pad, y, 1, Ink.Dim);
+        y += 7 + 12;
+
+        Text(dc, left > 0 ? $"RESETS IN {F.Countdown(left)}" : "NO 5H BLOCK OPEN", Pad, y, 1, left > 0 ? Ink.Mid : Ink.Dim);
+        Bar(dc, "block", W - Pad - 118, y + 2, 118, 3, left > 0 ? 1 - left / (5 * 3600) : 0, 20);
         return y + 7;
     }
 
@@ -417,8 +472,9 @@ sealed class PulseView : FrameworkElement
         double tx = Pad;
         PipPos = null;
         if (s.Claude.Live > 0) { PipPos = new Point(Pad, y + 1.5); tx += 10; }
-        Text(dc, $"CLAUDE {F.Tok(s.Claude.Week)} WK", tx, y, 1, Ink.Mid);
-        TextR(dc, $"TODAY {F.Tok(s.Claude.Today)}", W - Pad, y, 1, Ink.Dim);
+        double left = s.Claude.BlockEnd - F.Now;
+        Text(dc, $"CLAUDE {F.Tok(s.Claude.Week)} · ~{F.Usd(s.Claude.Cost)}", tx, y, 1, Ink.Mid);
+        TextR(dc, left > 0 ? $"RESETS {F.Countdown(left)}" : $"TODAY {F.Tok(s.Claude.Today)}", W - Pad, y, 1, Ink.Dim);
         return y + 7 + Pad;
     }
 }

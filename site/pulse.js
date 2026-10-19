@@ -70,6 +70,14 @@ const F = {
   size: (b) => (b >= 1e12 ? (b / 1e12).toFixed(1) + 'T' : b >= 1e9 ? (b / 1e9).toFixed(0) + 'G' : (b / 1e6).toFixed(0) + 'M'),
   rate: (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + 'G' : b >= 1e6 ? (b / 1e6).toFixed(1) + 'M' : b >= 1e3 ? (b / 1e3).toFixed(0) + 'K' : b.toFixed(0) + 'B'),
   tok: (v) => (v >= 1e9 ? (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v.toFixed(0)),
+  usd: (v) => (v < 100 ? '$' + v.toFixed(2) : v < 1e4 ? '$' + v.toFixed(0) : '$' + (v / 1e3).toFixed(1) + 'K'),
+  mem: (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + 'G' : (b / 1e6).toFixed(0) + 'M'),
+  countdown: (s) => { const m = Math.ceil(s / 60), h = Math.floor(m / 60); return h > 0 ? `${h}H ${m % 60}M` : `${m}M`; },
+};
+const FIVE_H = 5 * 3600;
+const TOP = {                                       // synthetic processes: [name, share of CPU, memory]
+  mac: [['XCODE', 1.7, 3.1e9], ['SAFARI', 0.7, 1.8e9], ['WINDOWSERVER', 0.4, 0.4e9], ['CLAUDE', 0.25, 0.9e9]],
+  win: [['CODE', 1.5, 2.6e9], ['CHROME', 0.8, 1.9e9], ['DWM', 0.35, 0.3e9], ['CLAUDE', 0.25, 0.9e9]],
 };
 
 /* ---------------------------------------------------------------- synthetic feed */
@@ -82,7 +90,7 @@ class Feed {
       diskUsed: 287e9, diskTotal: 494e9, temp: 47, peak: 55, gpu: 0.2, netIn: 1.2e6, netOut: 180e3,
       swapUsed: 1.2e9, swapTotal: 2.1e9, commitUsed: 14.2e9, commitTotal: 24e9, procs: 241, threads: 3120,
       battery: 82, load: 2.4, tick: false, clock: '09:41',
-      claude: { week: 0, today: 0, five: 31.9e6, output: 2.41e6, input: 9.8e6, cached: 0, sessions: 9, live: 1, calls: 3184, days: [0, 0, 0, 0, 0, 0, 0] },
+      claude: { week: 0, today: 0, block: 31.9e6, blockEnd: Date.now() / 1000 + 2 * 3600 + 14 * 60 + 30, cost: 0, output: 2.41e6, input: 9.8e6, cached: 0, sessions: 9, live: 1, calls: 3184, days: [0, 0, 0, 0, 0, 0, 0] },
     };
     const base = [88e6, 102e6, 164e6, 121e6, 96e6, 41e6, 22e6];
     const c = this.s.claude;
@@ -105,6 +113,18 @@ class Feed {
     c.week = c.days.reduce((a, b) => a + b, 0);
     c.today = c.days[this.todayIndex];
     c.cached = c.week - c.input - c.output;
+    c.cost = c.week * 0.447e-6;                    // a blended API rate, so the synthetic week lands near $184
+  }
+  /** seconds until the 5-hour block resets; a new one opens when it runs out */
+  blockLeft() {
+    const c = this.s.claude, now = Date.now() / 1000;
+    if (now >= c.blockEnd) { c.blockEnd = now + FIVE_H; c.block = 0; }
+    return c.blockEnd - now;
+  }
+  top(platform, mode) {
+    const s = this.s, j = (i) => 1 + Math.sin(Date.now() / 2300 + i * 1.7) * 0.12;
+    return TOP[platform].map(([n, c, m], i) => [n, mode === 'cpu' ? s.cpu * c * 100 * j(i) : m * (1 + (j(i) - 1) * 0.05)])
+      .sort((a, b) => b[1] - a[1]).slice(0, 3);
   }
   push(k, v) { const h = this.hist[k]; h.push(clamp(v)); if (h.length > 40) h.shift(); }
   step(seed = false) {
@@ -125,7 +145,7 @@ class Feed {
       s.clock = '09:41';
       if (Math.random() < 0.35) {                    // a live session spends a little
         const spent = 40e3 + Math.random() * 260e3;
-        s.claude.days[this.todayIndex] += spent; s.claude.five += spent; s.claude.output += spent * 0.012;
+        s.claude.days[this.todayIndex] += spent; s.claude.block += spent; s.claude.output += spent * 0.012;
         s.claude.calls += 1; this.recount();
       }
       if (Math.random() < 0.02) s.battery = Math.min(100, s.battery + 1);
@@ -152,6 +172,8 @@ class Widget {
     this.highlight = null;
     this.visible = true;
     this.lastLoop = 0;
+    this.topMode = null;
+    this.rows = {};
     feed.on(() => this.draw());
     widgets.add(this);
     new IntersectionObserver(([e]) => { this.visible = e.isIntersecting; }).observe(canvas);
@@ -165,6 +187,16 @@ class Widget {
 
   setSize(size) { this.size = size; this.draw(); this.canvas.dispatchEvent(new CustomEvent('pulse:size', { bubbles: true, detail: size })); }
   setScale(scale) { this.scale = scale; this.draw(); }
+  /** CPU or MEM row under a y in widget units (Full size only) */
+  rowAt(y) {
+    if (this.size !== 'full') return null;
+    return Object.keys(this.rows).find((k) => y >= this.rows[k][0] && y <= this.rows[k][1]) || null;
+  }
+  toggleTop(mode) {
+    this.topMode = this.topMode === mode ? null : mode;
+    this.draw();
+    this.canvas.dispatchEvent(new CustomEvent('pulse:top', { bubbles: true, detail: this.topMode }));
+  }
 
   /* -- tweened bars, only when a segment changes */
   tween(key, target, segments, now) {
@@ -257,6 +289,17 @@ class Widget {
     if (bar != null) this.bar(dc, key, x + 10, y + 45, Math.min(w - 20, 112), 5, bar, 16, false, now);
     else if (sub) this.text(dc, sub, x + 10, y + 45, 1, INK.mid);
   }
+  topList(dc, y, mode) {
+    const list = this.feed.top(this.platform, mode);
+    y += 14;
+    list.forEach(([name, v], i) => {
+      const ry = y + i * 13;
+      this.text(dc, String(i + 1), PAD, ry, 1, INK.dim);
+      this.text(dc, name, PAD + 14, ry, 1, INK.mid);
+      this.textR(dc, mode === 'cpu' ? `${Math.round(v)}%` : F.mem(v), W - PAD, ry, 1, INK.on);
+    });
+    return y + 2 * 13 + 7;
+  }
   region(name, y0, y1) { this.regions[name] = { x: PAD - 7, y: y0 - 7, w: INNER + 14, h: y1 - y0 + 14 }; }
 
   full(dc, now) {
@@ -266,10 +309,14 @@ class Widget {
     const t = s.temp, state = t < 50 ? 'COOL' : t < 70 ? 'WARM' : t < 85 ? 'HOT' : 'CRITICAL';
     let y0 = y;
     y = this.heroRow(dc, y, 'CPU', mac ? `8 CORES · LOAD ${s.load.toFixed(1)}` : `8 CORES · ${s.procs} PROCS`, F.pct(s.cpu), h.cpu);
-    this.cores(dc, PAD, y, INNER, s.cores); y += 15; this.region('cpu', y0, y);
+    this.cores(dc, PAD, y, INNER, s.cores); y += 15; this.rows.cpu = [y0 - 7, y + 7];
+    if (this.topMode === 'cpu') y = this.topList(dc, y, 'cpu');
+    this.region('cpu', y0, y);
     y = this.rule(dc, y); y0 = y;
     y = this.heroRow(dc, y, 'MEM', `${F.gib(s.mem * s.memTotal)} / ${F.gib(s.memTotal)} GB`, F.pct(s.mem), h.mem);
-    this.bar(dc, 'mem', PAD, y, INNER, 8, s.mem, 28, false, now); y += 8; this.region('mem', y0, y);
+    this.bar(dc, 'mem', PAD, y, INNER, 8, s.mem, 28, false, now); y += 8; this.rows.mem = [y0 - 7, y + 7];
+    if (this.topMode === 'mem') y = this.topList(dc, y, 'mem');
+    this.region('mem', y0, y);
     y = this.rule(dc, y); y0 = y;
     y = this.heroRow(dc, y, 'TMP', `${state} · PEAK ${Math.round(s.peak)}°`, `${Math.round(t)}°`, h.tmp);
     this.bar(dc, 'tmp', PAD, y, INNER, 8, (t - 30) / 70, 28, this.hot && s.tick, now); y += 8; this.region('tmp', y0, y);
@@ -308,14 +355,17 @@ class Widget {
     this.text(dc, 'TOKENS THIS WEEK', PAD, y + 28, 1, INK.dim);
     this.week(dc, W - PAD - 112, y, 112, c.days, this.feed.todayIndex);
     y += 47;
-    const cw = (INNER - 24) / 4;
-    [['TODAY', F.tok(c.today)], ['LAST 5H', F.tok(c.five)], ['OUTPUT', F.tok(c.output)], ['SESSIONS', String(c.sessions)]].forEach(([l, v], i) => {
+    const cw = (INNER - 24) / 4, left = this.feed.blockLeft();
+    [['TODAY', F.tok(c.today)], ['5H BLOCK', F.tok(c.block)], ['EST. COST', F.usd(c.cost)], ['SESSIONS', String(c.sessions)]].forEach(([l, v], i) => {
       this.text(dc, l, PAD + i * (cw + 8), y, 1, INK.dim);
       this.text(dc, v, PAD + i * (cw + 8), y + 12, 1.5, INK.on);
     });
     y += 35;
-    this.text(dc, `IN ${F.tok(c.input)} · CACHED ${F.tok(c.cached)}`, PAD, y, 1, INK.dim);
+    this.text(dc, `IN ${F.tok(c.input)} · OUT ${F.tok(c.output)} · CACHED ${F.tok(c.cached)}`, PAD, y, 1, INK.dim);
     this.textR(dc, `${c.calls} CALLS`, W - PAD, y, 1, INK.dim);
+    y += 19;
+    this.text(dc, `RESETS IN ${F.countdown(left)}`, PAD, y, 1, INK.mid);
+    this.bar(dc, 'block', W - PAD - 118, y + 2, 118, 3, 1 - left / FIVE_H, 20, false, performance.now());
     return y + 7;
   }
   compact(dc, now) {
@@ -332,8 +382,8 @@ class Widget {
     });
     y = this.rule(dc, y + 37, 12);
     this.pipPos = [PAD, y + 1.5];
-    this.text(dc, `CLAUDE ${F.tok(s.claude.week)} WK`, PAD + 10, y, 1, INK.mid);
-    this.textR(dc, `TODAY ${F.tok(s.claude.today)}`, W - PAD, y, 1, INK.dim);
+    this.text(dc, `CLAUDE ${F.tok(s.claude.week)} · ~${F.usd(s.claude.cost)}`, PAD + 10, y, 1, INK.mid);
+    this.textR(dc, `RESETS ${F.countdown(this.feed.blockLeft())}`, W - PAD, y, 1, INK.dim);
     return y + 7 + PAD;
   }
   mini(dc) {
@@ -466,6 +516,7 @@ function setupVitals() {
   const resize = () => w.setScale(fitScale(holder, W, 1.25));
   resize();
   addEventListener('resize', resize);
+  clickRows(w);
   const rows = [...document.querySelectorAll('[data-metric]')];
   const set = (m) => { w.highlight = m; w.draw(); rows.forEach((r) => r.classList.toggle('is-lit', r.dataset.metric === m)); };
   rows.forEach((r) => {
@@ -479,6 +530,13 @@ function setupVitals() {
     document.querySelectorAll('[data-vitals-os]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     document.querySelectorAll('[data-src]').forEach((el) => { el.hidden = el.dataset.src !== w.platform; });
   }));
+}
+
+/** Click CPU or MEM in a Full widget for the top processes, as in the app; the cursor says where. */
+function clickRows(w) {
+  const y = (e) => e.offsetY / w.scale;
+  w.canvas.addEventListener('pointermove', (e) => { w.canvas.classList.toggle('on-row', !!w.rowAt(y(e))); });
+  w.canvas.addEventListener('click', (e) => { const r = w.rowAt(y(e)); if (r) w.toggleTop(r); });
 }
 
 function setupSizes() {
@@ -506,6 +564,7 @@ function setupSizes() {
   const place = () => { pos = { x: (stage.clientWidth - canvas.offsetWidth) / 2, y: (stage.clientHeight - canvas.offsetHeight) / 2 }; keepInside(); };
   const setSize = (s) => {
     const right = pos.x + canvas.offsetWidth;
+    if (s !== 'full') w.topMode = null;
     w.setSize(s); fit();
     pos.x = right - canvas.offsetWidth; keepInside();         // like the app: the right edge stays put
     segs.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === s)));
@@ -523,6 +582,7 @@ function setupSizes() {
     holder.classList.add('is-dragging');
   });
   canvas.addEventListener('pointermove', (e) => {
+    canvas.classList.toggle('on-row', !drag && !!w.rowAt(e.offsetY / w.scale));
     if (!drag) return;
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
@@ -532,6 +592,7 @@ function setupSizes() {
     if (!drag) return;
     holder.classList.remove('is-dragging');
     if (!drag.moved && drag.y <= w.headerBottom) setSize(SIZES[(SIZES.indexOf(w.size) + 1) % 3]);
+    else if (!drag.moved && w.rowAt(drag.y)) { w.toggleTop(w.rowAt(drag.y)); fit(); }
     drag = null;
   };
   canvas.addEventListener('pointerup', end);
@@ -577,6 +638,7 @@ function setupClaude() {
   if (!el) return;
   const canvas = el.querySelector('canvas'), num = document.querySelector('[data-claude-week]');
   const today = document.querySelector('[data-claude-today]'), five = document.querySelector('[data-claude-five]');
+  const cost = document.querySelector('[data-claude-cost]'), reset = document.querySelector('[data-claude-reset]');
   const draw = () => {
     const c = feed.s.claude, wpx = el.clientWidth, dpr = Math.min(devicePixelRatio || 1, 3);
     const scale = wpx >= 460 ? 3 : 2, chartH = 30 * scale, h = chartH + 6 * scale + 7 * scale;
@@ -586,7 +648,9 @@ function setupClaude() {
     Widget.prototype.week.call({ rect: Widget.prototype.rect, text: Widget.prototype.text }, dc, 0, 0, wpx, c.days, feed.todayIndex, chartH, 10, scale);
     if (num) num.dataset.pixel = F.tok(c.week), mountPixel(num);
     if (today) { today.dataset.pixel = F.tok(c.today); mountPixel(today); today.nextElementSibling.textContent = F.tok(c.today); }
-    if (five) { five.dataset.pixel = F.tok(c.five); mountPixel(five); five.nextElementSibling.textContent = F.tok(c.five); }
+    if (five) { five.dataset.pixel = F.tok(c.block); mountPixel(five); five.nextElementSibling.textContent = F.tok(c.block); }
+    if (cost) { cost.dataset.pixel = F.usd(c.cost); mountPixel(cost); cost.nextElementSibling.textContent = F.usd(c.cost); }
+    if (reset) reset.textContent = F.countdown(feed.blockLeft()).toLowerCase().replace('h', ' h').replace('m', ' min');
   };
   draw();
   feed.on(draw);

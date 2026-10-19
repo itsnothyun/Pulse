@@ -19,6 +19,37 @@ sealed class Sampler
     public int Procs, Threads;
     public (int Pct, bool Charging, bool Ac)? Battery;
     public ClaudeStats Claude = new();
+    public List<TopProc> Top = new();
+    TopMode? topMode;
+    bool topBusy;
+    readonly TopProbe topProbe = new();
+
+    /// <summary>Which top-process list is open under CPU or MEM, if any.</summary>
+    public TopMode? TopMode
+    {
+        get => topMode;
+        set { topMode = value; Top = new(); RefreshTop(); Updated?.Invoke(); }
+    }
+
+    void RefreshTop()
+    {
+        if (topMode is not { } m || topBusy) return;
+        topBusy = true;
+        Task.Run(() => topProbe.Read(m)).ContinueWith(r => dispatcher.BeginInvoke(() =>
+        {
+            topBusy = false;
+            if (r.IsCompletedSuccessfully && topMode == m) { Top = r.Result; Updated?.Invoke(); }
+        }));
+    }
+
+    /// <summary>Synchronous read for --snapshot (two passes, so CPU has a delta).</summary>
+    public void TopSync(TopMode m)
+    {
+        topMode = m;
+        topProbe.Read(m);
+        System.Threading.Thread.Sleep(500);
+        Top = topProbe.Read(m);
+    }
     public string Clock = "";
     public bool Tick;
     public readonly Dictionary<string, List<double>> Hist = new();
@@ -127,6 +158,8 @@ sealed class Sampler
             }));
         }
 
+        if (n % 2 == 0) RefreshTop();
+
         n++;
         Updated?.Invoke();
     }
@@ -158,9 +191,12 @@ sealed class Sampler
         CommitUsed = 14.2e9; CommitTotal = 24.0e9; Procs = 241; Threads = 3120;
         Battery = (86, true, true);
         Clock = "09:41";
+        if (topMode == PulseApp.TopMode.Cpu) Top = new() { new TopProc("Code", 61), new TopProc("chrome", 23), new TopProc("dwm", 14) };
+        if (topMode == PulseApp.TopMode.Mem) Top = new() { new TopProc("Code", 3.1e9), new TopProc("chrome", 1.8e9), new TopProc("claude", 0.9e9) };
         Claude = new ClaudeStats
         {
-            Ready = true, Week = 412.6e6, Today = 58.3e6, Window5h = 31.9e6, Output = 2.41e6,
+            Ready = true, Week = 412.6e6, Today = 58.3e6, Block = 31.9e6, Output = 2.41e6, Cost = 184.2,
+            BlockEnd = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0 + 2 * 3600 + 14 * 60 + 30,
             Input = 9.8e6, CacheRead = 400.4e6, Sessions = 9, Live = 1, Calls = 3184, TodayIndex = 3,
             Days = new[] { 88e6, 102e6, 164e6, 58.3e6, 0, 0, 0 },
         };

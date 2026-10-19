@@ -22,15 +22,15 @@
 
 | | |
 |---|---|
-| **CPU** | total load, a pixel meter per core, 30‑second trend |
-| **Memory** | used / total (Activity Monitor's "Memory Used" on macOS) |
+| **CPU** | total load, a pixel meter per core, 30‑second trend · click for the top 3 processes |
+| **Memory** | used / total (Activity Monitor's "Memory Used" on macOS) · click for the top 3 processes |
 | **Temperature** | SoC sensors on Apple Silicon · ACPI thermal zone on Windows |
 | **Disk** | free space on the system drive |
 | **GPU** | utilisation (IOAccelerator on macOS, GPU Engine counters on Windows) |
 | **Network** | download / upload per second |
 | **Swap / Commit** | swap on macOS, commit charge on Windows |
 | **Power** | battery %, charging state |
-| **Claude Code** | tokens this week (Mon–Sun chart), today, last 5 h, output, sessions, live sessions |
+| **Claude Code** | tokens this week (Mon–Sun chart), today, current 5‑hour block with a reset countdown, estimated cost, sessions, live sessions |
 
 Everything is drawn with a hand-made 5×7 pixel font — no system fonts, no images.
 Subtle loops (a header scanner, a breathing *live* pixel, a slow CRT sweep) run on the
@@ -60,6 +60,7 @@ xattr -dr com.apple.quarantine /Applications/Pulse.app
 
 - **Drag** anywhere to move it — the position is remembered.
 - **Click the header** to step through three sizes: **Full** (everything), **Compact** (CPU, memory, temperature, disk) and **Mini** (one quiet line, no motion).
+- **Click CPU or MEM** (Full size) to list the three processes using the most; click again to close.
 - **Right-click** for *Size*, *Always on Top*, *Launch at Login*, Activity Monitor / Task Manager, *Quit*.
 
 ## Claude Code usage
@@ -70,6 +71,11 @@ block of every API response since Monday 00:00. Responses are de-duplicated by m
 and each pass reads only the bytes appended since the last one, so after the first scan it's nearly free.
 
 - **Tokens this week** = input + output + cache writes + cache reads.
+- **5H block** = tokens since the current five-hour block opened. A block opens at the hour of your first
+  message after the previous one ran out; the countdown shows when it resets.
+- **Est. cost** = each response priced by its model at Anthropic's API list rates (input, output, cache write,
+  cache read). On a subscription you don't pay per token, so treat it as value, not a bill. The rates are one
+  table (`ClaudeUsage.prices` in `macos/Pulse.swift`, `Prices` in `windows/Pulse/ClaudeUsage.cs`); unknown models count as $0.
 - **Live** = sessions whose transcript changed in the last 5 minutes.
 - It counts Claude Code only (not the Claude desktop or web apps) and can't see plan limits.
 - Nothing leaves your machine — Pulse makes no network requests.

@@ -305,6 +305,7 @@ The product itself, drawn identically in SwiftUI, WPF and canvas.
 - **House ease:** cubic-bezier(0.16, 1, 0.3, 1) for every site transition; durations 120ms (press), 160 to 200ms (hover, colour), 260ms (quit fade with 6px blur).
 - **Headline assembly:** the hero headline only, once per load: each dot fades and drops 2px over 420ms with a randomised stagger of up to about 0.6s.
 - **Widget loops:** scanner step 0.16s (0.07s when hot) with a 3-dot trail at 90/50/25%; live pip 1.3s breathe; CRT band 80px tall at 4% white sweeping every 9s; bars tween 0.45s ease-out and only animate when a segment changes; the weekly total counts up over 1.2s. The site drives ambient loops at 12fps and pauses widgets that are off screen.
+- **Page loops:** the same three loops leave the widget and mark the page, in CSS on the compositor: a scanner beside the nav wordmark, beside each section eyebrow and (at 2× size) above the closing headline; a breathing pip on the Claude board's live line; and the CRT band sweeping the hero desktops, the sizes stage and the Claude board. Nothing else on the page loops.
 - **Terminal caret:** 1.1s stepped blink.
 
 ## Do's and Don'ts

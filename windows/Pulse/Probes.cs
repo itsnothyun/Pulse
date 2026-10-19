@@ -62,6 +62,73 @@ static class Native
     public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int index, IntPtr value);
 }
 
+enum TopMode { Cpu, Mem }
+
+readonly record struct TopProc(string Name, double Value);
+
+/// <summary>
+/// Heaviest processes, grouped by name, from one SystemProcessInformation snapshot: it covers every process,
+/// including system ones, without opening a handle to any of them. Only polled while a list is open.
+/// </summary>
+sealed class TopProbe
+{
+    Dictionary<long, long> prevTimes = new();
+    long prevStamp;
+
+    public List<TopProc> Read(TopMode mode)
+    {
+        int len = 1 << 20;
+        IntPtr buf = IntPtr.Zero;
+        try
+        {
+            while (true)
+            {
+                buf = Marshal.AllocHGlobal(len);
+                int st = Native.NtQuerySystemInformation(5, buf, len, out int need);
+                if (st == 0) break;
+                Marshal.FreeHGlobal(buf); buf = IntPtr.Zero;
+                if (st != unchecked((int)0xC0000004)) return new();          // anything but "buffer too small"
+                len = Math.Max(len * 2, need + (64 << 10));
+            }
+
+            long stamp = Stopwatch.GetTimestamp();
+            double elapsed100ns = prevStamp == 0 ? 0 : (stamp - prevStamp) * 1e7 / Stopwatch.Frequency;
+            var times = new Dictionary<long, long>();
+            var by = new Dictionary<string, (double Cpu, double Mem)>(StringComparer.OrdinalIgnoreCase);
+            int off = 0;
+            while (true)
+            {
+                IntPtr p = buf + off;
+                int next = Marshal.ReadInt32(p);
+                // SYSTEM_PROCESS_INFORMATION (x64): private working set @8, user/kernel time @40/@48,
+                // image name @56 (UNICODE_STRING), pid @80
+                long pid = Marshal.ReadInt64(p, 80);
+                ushort nameBytes = (ushort)Marshal.ReadInt16(p, 56);
+                IntPtr namePtr = Marshal.ReadIntPtr(p, 64);
+                if (pid != 0 && namePtr != IntPtr.Zero && nameBytes > 0)
+                {
+                    string name = Marshal.PtrToStringUni(namePtr, nameBytes / 2);
+                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name = name[..^4];
+                    long cpuTime = Marshal.ReadInt64(p, 40) + Marshal.ReadInt64(p, 48);
+                    times[pid] = cpuTime;
+                    double cpu = elapsed100ns > 0 && prevTimes.TryGetValue(pid, out long before)
+                        ? Math.Max(cpuTime - before, 0) / (elapsed100ns * Environment.ProcessorCount) * 100 : 0;
+                    double mem = Marshal.ReadInt64(p, 8);
+                    var e = by.TryGetValue(name, out var v) ? v : (0, 0);
+                    by[name] = (e.Cpu + cpu, e.Mem + mem);
+                }
+                if (next == 0) break;
+                off += next;
+            }
+            prevTimes = times; prevStamp = stamp;
+            return by.Select(kv => new TopProc(kv.Key, mode == TopMode.Cpu ? kv.Value.Cpu : kv.Value.Mem))
+                     .OrderByDescending(t => t.Value).Take(3).ToList();
+        }
+        catch { return new(); }
+        finally { if (buf != IntPtr.Zero) Marshal.FreeHGlobal(buf); }
+    }
+}
+
 static class Probes
 {
     /// <summary>Cumulative (idle, kernel incl. idle, user) 100ns ticks per logical CPU.</summary>
