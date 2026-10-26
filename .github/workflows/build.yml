@@ -67,9 +67,49 @@ jobs:
           name: snapshots-macos
           path: snapshot-macos*.png
 
+  linux:
+    runs-on: ubuntu-24.04-arm          # the DGX Spark is aarch64; the code is pure Python so x86-64 works too
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-3.0 python3-cairo xvfb
+      - name: Unit tests
+        run: python3 -m unittest discover -s linux/tests -v
+      - name: Render snapshots (proves the UI draws on Linux)
+        working-directory: linux
+        run: |
+          python3 -m pulse --snapshot ../snapshot-linux.png
+          python3 -m pulse --snapshot ../snapshot-linux-demo.png --demo
+          python3 -m pulse --snapshot ../snapshot-linux-compact.png --demo --compact
+          python3 -m pulse --snapshot ../snapshot-linux-mini.png --demo --mini
+          python3 -m pulse --snapshot ../snapshot-linux-top-cpu.png --top cpu
+          python3 -m pulse --snapshot ../snapshot-linux-top-mem.png --top mem
+      - name: GTK window smoke test (starts, draws for 4 s, exits cleanly)
+        working-directory: linux
+        run: |
+          timeout -s TERM 4 xvfb-run -a python3 -m pulse || [ $? -eq 124 ]
+      - name: Install script
+        run: |
+          ./linux/install.sh
+          test -x ~/.local/bin/pulse && test -f ~/.local/share/applications/pulse.desktop
+          ./linux/install.sh --uninstall
+      - name: Package
+        run: |
+          mkdir -p stage/pulse-linux && cp -r linux/pulse linux/install.sh stage/pulse-linux/ && cp assets/icon-512.png stage/pulse-linux/icon.png
+          find stage -name __pycache__ -prune -exec rm -rf {} +
+          tar -C stage -czf Pulse-linux.tar.gz pulse-linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pulse-linux
+          path: Pulse-linux.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-linux
+          path: snapshot-linux*.png
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, macos]
+    needs: [windows, macos, linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -81,4 +121,5 @@ jobs:
           files: |
             Pulse-windows-x64.zip
             Pulse-macos-universal.zip
+            Pulse-linux.tar.gz
           generate_release_notes: true

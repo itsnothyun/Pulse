@@ -16,3 +16,7 @@ snapshot-*.png
 # impeccable review captures (regenerable)
 .impeccable/review/
 .impeccable/questions/
+
+# python
+__pycache__/
+*.pyc
