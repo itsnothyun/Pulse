@@ -15,8 +15,9 @@
   <meta property="og:image" content="img/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preload" href="fonts/SchibstedGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="pulse.js"></script>
+  <link rel="stylesheet" href="style.css?v=6">
+  <script type="module" src="pulse.js?v=6"></script>
+  <script type="module" src="orbit.js?v=6"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -47,25 +48,28 @@
   <main id="main">
     <!-- hero -->
     <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="wrap">
-        <h1 id="hero-title" class="hero-title">
-          <span class="sr">The pulse of your machine.</span>
-          <span class="px px-hero" data-pixel="THE PULSE OF|YOUR MACHINE." data-assemble aria-hidden="true"></span>
-        </h1>
-        <div class="hero-copy">
-          <p class="lede">A tiny monochrome widget for macOS and Windows. CPU, memory, temperature and disk at a glance, plus the Claude Code tokens you spent this week.</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/itsnothyun/Pulse">
-              <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z"/></svg>
-              <span>Star on GitHub</span>
-              <span class="count" data-stars hidden></span>
-            </a>
-            <a class="btn btn-ghost" href="#install">
-              <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg>
-              <span>Download</span>
-            </a>
+      <div class="hero-stage">
+        <canvas class="orbit" data-orbit aria-hidden="true"></canvas>
+        <div class="wrap hero-inner">
+          <h1 id="hero-title" class="hero-title">
+            <span class="sr">The pulse of your machine.</span>
+            <span class="px px-hero" data-pixel="THE PULSE OF|YOUR MACHINE." data-assemble aria-hidden="true"></span>
+          </h1>
+          <div class="hero-copy">
+            <p class="lede">A tiny monochrome widget for macOS and Windows. CPU, memory, temperature and disk at a glance, plus the Claude Code tokens you spent this week.</p>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="https://github.com/itsnothyun/Pulse">
+                <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h-1v2h1v1h-1v-1h-1v-1h-1v1h-1v1h-1v-1h1v-2h-1v-1h-1v-1h3z"/></svg>
+                <span>Star on GitHub</span>
+                <span class="count" data-stars hidden></span>
+              </a>
+              <a class="btn btn-ghost" href="#install">
+                <svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg>
+                <span>Download</span>
+              </a>
+            </div>
+            <p class="meta">Free and open source · MIT · macOS 13+ · Windows 10 &amp; 11</p>
           </div>
-          <p class="meta">Free and open source · MIT · macOS 13+ · Windows 10 &amp; 11</p>
         </div>
       </div>
 
