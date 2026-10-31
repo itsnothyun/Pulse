@@ -1,0 +1,16 @@
+{
+  "name": "pulse-site-metal",
+  "private": true,
+  "description": "Builds site/metal.js: the metal-fx ring on the marketing site's buttons, bundled with React so the site stays plain HTML.",
+  "scripts": {
+    "build": "esbuild entry.jsx --bundle --minify --format=esm --target=es2020 --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\" --legal-comments=eof --outfile=../site/metal.js"
+  },
+  "dependencies": {
+    "metal-fx": "2.0.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

@@ -577,3 +577,15 @@ canvas.on-row { cursor: pointer !important; }
   .scan i:nth-child(3) { transform: translateX(calc(var(--st) * 2)); }
   .sweep { display: none; }
 }
+
+/* ---------------------------------------------------------------- metal buttons
+   metal.js moves each .btn into a host that metal-fx paints a silver ring over. */
+.metal-slot, .metal-host { display: inline-flex; }
+.metal-slot > .metal { display: inline-flex; }
+.steps .metal-slot { display: flex; width: fit-content; margin-top: 14px; }
+.steps .metal-slot .btn-dl { margin-top: 0; }
+/* metal-fx paints its ring in the outer 3px under the button: keep the fill inside that band */
+.metal .btn { border: 3px solid transparent; background-clip: padding-box; padding-inline: 20px; }
+.metal .btn-small { padding-inline: 12px; }
+.metal .btn-ghost, .metal .btn-star { background-color: var(--bg); }
+.metal .btn-ghost:hover, .metal .btn-star:hover { background-color: #161615; }

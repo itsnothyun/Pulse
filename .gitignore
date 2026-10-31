@@ -20,3 +20,6 @@ snapshot-*.png
 # python
 __pycache__/
 *.pyc
+
+# site-metal build deps
+node_modules/
