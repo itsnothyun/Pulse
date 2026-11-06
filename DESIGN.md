@@ -327,3 +327,7 @@ The product itself, drawn identically in SwiftUI, WPF and canvas.
 - **Don't** put shadows on content cards, lists or buttons; shadows belong to desktop objects only.
 - **Don't** add motion to the Mini size or loops that run under reduced motion.
 - **Don't** draw data with anti-aliased curves, gradients or rounded marks; bars, sparklines and meters are square cells.
+
+## Ecosystem front page (`site/index.html`, `site/home.css`)
+
+The front page extends this system with one blue (`#234EF4` and its darker steps), Archivo for type and JetBrains Mono for small labels. It uses bento cards with a 30px radius, off-white key cards, pill buttons with a round arrow, operators on card seams, and looping SVG art per product. Loops pause off screen and stop for reduced motion. Product pages keep the original Schibsted Grotesk and pixel system.
