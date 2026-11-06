@@ -7,7 +7,6 @@ const RHYTHMS = {
   track: [1,3,0,2,5,1,0,4,2,0,0,1,6,3,0,2,0,0,1,4],
   connect: [0,0,3,3,3,0,0,0,3,3,3,3,3,0,0,3,0,0,0],
   explorer: [1,2,3,4,5,6,0,0,1,2,3,4,0,0,0,1,2,3,4,5,0,0],
-  nova: [0,1,0,2,0,3,0,4,0,5,0,6,0,0,0,0,0],
 };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 const STEP = 5, DOT = 4, ROWS = 15, BASE = 11;

@@ -330,4 +330,4 @@ The product itself, drawn identically in SwiftUI, WPF and canvas.
 
 ## Ecosystem front page (`site/index.html`, `site/home.css`)
 
-The front page extends this system with one blue (`#234EF4` and its darker steps), Archivo for type and JetBrains Mono for small labels. It uses bento cards with a 30px radius, off-white key cards, pill buttons with a round arrow, operators on card seams, and looping SVG art per product. Loops pause off screen and stop for reduced motion. Product pages keep the original Schibsted Grotesk and pixel system.
+The front page uses this system as it stands: the orbit hero, pixel headings, Schibsted Grotesk, the original buttons and a strictly monochrome palette. Sections sit on open ground. Containers are for product features only, and each holds looping SVG art that pauses off screen and stops for reduced motion.
