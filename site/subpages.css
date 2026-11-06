@@ -80,3 +80,50 @@
 .shared h3 { margin-bottom: 8px; }
 .shared p { font-size: 16px; color: var(--text-dim); }
 @media (max-width: 900px) { .shared { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------------------------------------------------------------- pixel trace */
+.trace { margin-top: clamp(48px, 6vw, 80px); }
+.trace canvas { display: block; }
+
+/* ---------------------------------------------------------------- ecosystem directory */
+.eco-hero { padding-top: clamp(56px, 7vw, 104px); }
+.dir-group { margin-top: clamp(64px, 7vw, 96px); }
+.dir-group:first-child { margin-top: 0; }
+.dir-title { margin: 0 0 20px; font-size: 15px; font-weight: 400; line-height: 1.4; color: var(--text-dim); }
+.dir { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.dir-row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(250px, auto); gap: 20px clamp(20px, 3vw, 40px);
+  align-items: center; padding: clamp(28px, 3vw, 40px) 0;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 180ms var(--ease-out);
+}
+.dir-row:hover, .dir-row:focus-within { background: linear-gradient(90deg, rgba(242, 242, 237, 0.045), transparent 70%); }
+.dir-mark { color: var(--ink-dim); transition: color 180ms var(--ease-out); }
+.dir-row:hover .dir-mark, .dir-row:focus-within .dir-mark { color: var(--on); }
+.mark { display: block; width: 45px; height: 45px; fill: currentColor; shape-rendering: crispEdges; }
+.dir-row h3 { margin: 0 0 12px; }
+.dir-row .px-product { --dot: 4px; display: block; }
+.dir-row p { margin: 0; max-width: 58ch; font-size: 17px; line-height: 1.5; color: var(--text-dim); text-wrap: pretty; }
+.dir-go { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.dir-go .cta-row { justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
+.dir-go .note { max-width: 30ch; font-size: 13px; line-height: 1.4; color: var(--text-dim); text-align: right; }
+.status { display: inline-flex; align-items: center; height: 40px; font-size: 14px; color: var(--text-dim); }
+@media (max-width: 860px) {
+  .dir-row { grid-template-columns: 45px minmax(0, 1fr); }
+  .dir-go { grid-column: 2; align-items: flex-start; }
+  .dir-go .cta-row { justify-content: flex-start; flex-wrap: wrap; }
+  .dir-go .note { text-align: left; }
+}
+
+/* ---------------------------------------------------------------- product pages */
+.product-mark { margin-bottom: 32px; color: var(--on); }
+.logo-mark { width: 96px; height: 96px; margin-bottom: 32px; }
+.fact-rows { margin-top: var(--space-block); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(48px, 7vw, 120px); }
+.fact { padding: 32px 0; border-top: 1px solid var(--line); }
+.fact h3 { margin: 0 0 10px; font-size: 20px; }
+.fact p { margin: 0; max-width: 52ch; }
+@media (max-width: 900px) { .fact-rows { grid-template-columns: minmax(0, 1fr); } }
+.shot-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 3vw, 40px); margin-top: var(--space-block); }
+.shot-pair figure { margin: 0; }
+.shot-pair figcaption { margin-top: 16px; font-size: 14px; color: var(--text-dim); }
+@media (max-width: 720px) { .shot-pair { grid-template-columns: minmax(0, 1fr); } }
