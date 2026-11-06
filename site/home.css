@@ -83,8 +83,7 @@
 .rail-seg { fill: #dcdcd5; }
 
 /* every loop waits for its section to be on screen */
-[data-loop] *, [data-loop] *::before, [data-loop] *::after { animation-play-state: paused; }
-[data-loop].on *, [data-loop].on *::before, [data-loop].on *::after { animation-play-state: running; }
+.home [data-loop]:not(.on) *, .home [data-loop]:not(.on) *::before, .home [data-loop]:not(.on) *::after { animation-play-state: paused !important; }
 
 /* hub: 18s, 3s per product */
 .hn-bg { animation: hn-bg 18s linear infinite; animation-delay: calc(var(--k) * 3s); }
