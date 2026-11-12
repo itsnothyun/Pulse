@@ -56,6 +56,7 @@ GLYPHS = {
     "⚡": (0x02, 0x04, 0x08, 0x1F, 0x02, 0x04, 0x08),
     "$": (0x04, 0x0F, 0x14, 0x0E, 0x05, 0x1E, 0x04),
     "~": (0, 0, 0x08, 0x15, 0x02, 0, 0),
+    "@": (0x0E, 0x11, 0x17, 0x15, 0x17, 0x10, 0x0E),
 }
 
 
@@ -77,6 +78,29 @@ class Ink:
         return (c[0], c[1], c[2], c[3] * max(0.0, min(1.0, a)))
 
 
+# Soft pastel spectrum for the ULTRA plan label: one full loop every RAINBOW_PERIOD px, drifting
+# RAINBOW_PERIOD px every RAINBOW_SECONDS (a 5-letter word shows about half of it).
+RAINBOW = ("#F2A7BC", "#F2C7A0", "#DCE6A3", "#A8E0C8", "#A6C8F0", "#C6AEF0", "#F2A7BC")
+RAINBOW_PERIOD = 64
+RAINBOW_SECONDS = 7.0
+
+
+def rainbow(phase=0.0):
+    """A repeating horizontal gradient, shifted right by `phase` px (panel coordinates)."""
+    g = cairo.LinearGradient(phase, 0, phase + RAINBOW_PERIOD, 0)
+    g.set_extend(cairo.EXTEND_REPEAT)
+    for i, hue in enumerate(RAINBOW):
+        g.add_color_stop_rgb(i / (len(RAINBOW) - 1), int(hue[1:3], 16) / 255, int(hue[3:5], 16) / 255, int(hue[5:7], 16) / 255)
+    return g
+
+
+def _set_ink(dc, color):
+    if isinstance(color, cairo.Pattern):
+        dc.set_source(color)
+    else:
+        dc.set_source_rgba(*color)
+
+
 def has(ch):
     return ch in GLYPHS
 
@@ -87,7 +111,7 @@ def width(text, scale):
 
 def rect(dc, color, x, y, w, h):
     if dc is not None and w > 0 and h > 0:
-        dc.set_source_rgba(*color)
+        _set_ink(dc, color)
         dc.rectangle(x, y, w, h)
         dc.fill()
 
@@ -105,7 +129,7 @@ def draw(dc, text, x, y, scale, color):
             for c in range(5):
                 if bits & (0x10 >> c):
                     dc.rectangle(ox + c * scale, y + r * scale, dot, dot)
-    dc.set_source_rgba(*color)
+    _set_ink(dc, color)
     dc.fill()
 
 

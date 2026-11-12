@@ -1,4 +1,9 @@
-"""Pulse for Linux.   python3 -m pulse [--snapshot out.png [--compact|--mini] [--demo] [--top cpu|mem]]"""
+"""Pulse for Linux.
+
+    python3 -m pulse                    start the widget (a second launch brings the running one back)
+    python3 -m pulse --click-through    toggle click-through on the running widget (bind it to a shortcut)
+    python3 -m pulse --snapshot out.png [--landscape|--claude|--compact|--mini] [--open] [--demo] [--top cpu|mem]
+"""
 import sys
 import time
 
@@ -6,7 +11,7 @@ from . import view as V
 from .sampler import Sampler
 
 
-def snapshot(path, size, demo, top):
+def snapshot(path, size, demo, top, open_breakdown=False):
     """Renders the widget to a PNG without opening a window (debug aid, used by CI). Needs only cairo."""
     import cairo
     from . import loops
@@ -24,6 +29,7 @@ def snapshot(path, size, demo, top):
         if top:
             s.top_sync(top)
     v = V.PulseView(s, size)
+    v.claude_open = open_breakdown
     w, h = v.measure()
     scale = 2
     surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(w * scale), int(h * scale))
@@ -44,10 +50,11 @@ def main(argv):
         top = None
         if "--top" in argv and argv.index("--top") + 1 < len(argv):
             top = "mem" if argv[argv.index("--top") + 1] == "mem" else "cpu"
-        size = V.MINI if "--mini" in argv else V.COMPACT if "--compact" in argv else V.FULL
-        return snapshot(argv[i + 1], size, "--demo" in argv, top)
+        size = (V.MINI if "--mini" in argv else V.COMPACT if "--compact" in argv else V.LANDSCAPE if "--landscape" in argv
+                else V.CLAUDE if "--claude" in argv else V.FULL)
+        return snapshot(argv[i + 1], size, "--demo" in argv, top, "--open" in argv)
     from .app import run
-    return run()
+    return run(argv)
 
 
 if __name__ == "__main__":

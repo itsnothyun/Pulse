@@ -27,6 +27,7 @@ ID_KEY = b'"id":"msg_'
 REQ_KEY = b'"requestId":"'
 SESSION_KEY = b'"sessionId":"'
 MODEL_KEY = b'"model":"'
+CWD_KEY = b'"cwd":"'
 
 
 def price(model):
@@ -34,6 +35,28 @@ def price(model):
         if m in model:
             return p
     return FREE
+
+
+def family(model):
+    return ("FABLE" if "fable" in model else "OPUS" if "opus" in model else "SONNET" if "sonnet" in model
+            else "HAIKU" if "haiku" in model else "OTHER")
+
+
+def project_name(cwd, fallback):
+    """Project name: the last folder of the session's working directory, else the transcript folder."""
+    if cwd:
+        parts = [p for p in cwd.replace("\\\\", "/").replace("\\", "/").split("/") if p]
+        if parts:
+            return parts[-1]
+    return fallback
+
+
+@dataclass
+class Slice:
+    """One line of a breakdown: who or what spent the tokens."""
+    name: str
+    tokens: float
+    cost: float
 
 
 @dataclass
@@ -53,12 +76,38 @@ class ClaudeStats:
     today_index: int = 0
     days: list = field(default_factory=lambda: [0.0] * 7)
     ready: bool = False
+    email: str = None                    # the account Claude Code is signed in with (None = API key or signed out)
+    plan: str = None
+    by_model: list = field(default_factory=list)     # [Slice], this week, largest first
+    by_project: list = field(default_factory=list)
+    by_account: list = field(default_factory=list)
 
 
 def root():
     cfg = os.environ.get("CLAUDE_CONFIG_DIR")
     base = cfg if cfg else os.path.join(os.path.expanduser("~"), ".claude")
     return os.path.join(base, "projects")
+
+
+def config_file():
+    """~/.claude.json (or $CLAUDE_CONFIG_DIR/.claude.json) -- rewritten by /login, so it names the current account."""
+    cfg = os.environ.get("CLAUDE_CONFIG_DIR")
+    return os.path.join(cfg, ".claude.json") if cfg else os.path.join(os.path.expanduser("~"), ".claude.json")
+
+
+def account_log_path():
+    """When each account was first seen signed in -- next to settings.json."""
+    from .settings import CONFIG_DIR
+    return os.path.join(CONFIG_DIR, "accounts.json")
+
+
+def _top(events, key):
+    groups = {}
+    for e in events:
+        g = groups.setdefault(key(e), [0.0, 0.0])
+        g[0] += e[1] + e[2] + e[3] + e[4]
+        g[1] += e[5]
+    return sorted((Slice(k, t, c) for k, (t, c) in groups.items()), key=lambda s: -s.tokens)
 
 
 def _field(line, key, last=False):
@@ -88,11 +137,18 @@ def week_start(now=None):
 
 
 class ClaudeUsage:
-    def __init__(self, projects_root=None):
+    def __init__(self, projects_root=None, config=None, accounts=None):
         self.root = projects_root
+        self.config = config
+        self.accounts = accounts
+        self.account_stamp = None
+        self.email = self.plan = None
+        # When each account was first seen signed in (unix s). Transcripts don't name the account, so tokens are
+        # credited to whoever was signed in at the time; the first account ever seen also owns the history before it.
+        self.account_log = self._load_account_log()
         self.offsets = {}
         self.seen = set()
-        self.events = []                 # (ts, input, output, cache_write, cache_read, cost, session)
+        self.events = []                 # (ts, input, output, cache_write, cache_read, cost, session, model, project)
         self.gate = threading.Lock()
         self.ws = 0.0
 
@@ -115,14 +171,19 @@ class ClaudeUsage:
                 for name in files:
                     if name.endswith(".jsonl"):
                         try:
-                            live += self._read_file(os.path.join(dirpath, name), ws, now)
+                            live += self._read_file(os.path.join(dirpath, name), base, ws, now)
                         except OSError:
                             pass         # file vanished -- next pass
 
-        st = ClaudeStats(ready=True, live=live, calls=len(self.events), today_index=since_monday)
+        self._read_account()
+        self._note_account(self.email, now)
+        st = ClaudeStats(ready=True, live=live, calls=len(self.events), today_index=since_monday,
+                         email=self.email, plan=self.plan,
+                         by_model=_top(self.events, lambda e: e[7]), by_project=_top(self.events, lambda e: e[8]),
+                         by_account=_top(self.events, lambda e: self.account_at(e[0])))
         day_start = datetime.fromtimestamp(now).replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
         sessions = set()
-        for ts, i, o, cw, cr, cost, sess in self.events:
+        for ts, i, o, cw, cr, cost, sess, _model, _project in self.events:
             t = i + o + cw + cr
             st.week += t
             st.input += i
@@ -146,8 +207,63 @@ class ClaudeUsage:
             st.block, st.block_end = b_tok, b_start + FIVE_HOURS
         return st
 
-    def _read_file(self, path, ws, now):
+    # ---------- account attribution ----------
+
+    def _load_account_log(self):
+        try:
+            with open(self.accounts or account_log_path(), encoding="utf-8") as f:
+                d = json.load(f)
+            log = [(float(e["from"]), e["email"]) for e in d
+                   if isinstance(e, dict) and isinstance(e.get("from"), (int, float)) and isinstance(e.get("email"), str)
+                   and e["email"]]
+            return sorted(log, key=lambda e: e[0])
+        except (OSError, ValueError, TypeError, KeyError):
+            return []
+
+    def _note_account(self, current, now):
+        if current is None or (self.account_log and self.account_log[-1][1] == current):
+            return
+        self.account_log.append((0.0 if not self.account_log else now, current))
+        path = self.accounts or account_log_path()
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump([{"from": t, "email": e} for t, e in self.account_log], f)
+        except OSError:
+            pass
+
+    def account_at(self, ts):
+        who = self.account_log[0][1] if self.account_log else "UNKNOWN"
+        for start, e in self.account_log:
+            if start <= ts:
+                who = e
+            else:
+                break
+        return who
+
+    def _read_account(self):
+        """Re-reads the signed-in account only when the config file changes."""
+        path = self.config or config_file()
+        try:
+            stamp = os.stat(path).st_mtime_ns
+        except OSError:
+            self.email = self.plan = self.account_stamp = None
+            return
+        if stamp == self.account_stamp:
+            return
+        try:
+            with open(path, encoding="utf-8") as f:
+                acct = json.load(f).get("oauthAccount")
+        except (OSError, ValueError):
+            return                       # mid-write -- next pass
+        acct = acct if isinstance(acct, dict) else {}
+        str_or_none = lambda v: v if isinstance(v, str) else None
+        self.email, self.plan = str_or_none(acct.get("emailAddress")), str_or_none(acct.get("planDisplayName"))
+        self.account_stamp = stamp
+
+    def _read_file(self, path, base, ws, now):
         """Reads the new bytes of one transcript; returns 1 if it looks like a live session."""
+        folder = os.path.relpath(path, base).split(os.sep)[0]
         stt = os.stat(path)
         if stt.st_mtime < ws:
             return 0
@@ -169,13 +285,13 @@ class ClaudeUsage:
                 if last_nl < 0:
                     continue                   # a single line larger than the chunk
                 for line in pending[:last_nl].split(b"\n"):
-                    self._ingest(line, ws)
+                    self._ingest(line, ws, folder)
                 consumed += last_nl + 1
                 pending = pending[last_nl + 1:]
         self.offsets[path] = off + consumed
         return live
 
-    def _ingest(self, line, ws):
+    def _ingest(self, line, ws, folder=""):
         # Cheap field extraction -- lines can be megabytes, so avoid parsing the whole record.
         u = line.find(USAGE_KEY)
         if u < 0:
@@ -214,6 +330,7 @@ class ClaudeUsage:
             return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else 0.0
 
         i, o, cw, cr = n("input_tokens"), n("output_tokens"), n("cache_creation_input_tokens"), n("cache_read_input_tokens")
-        p = price(_field(line, MODEL_KEY) or "")
+        model = _field(line, MODEL_KEY) or ""
+        p = price(model)
         self.events.append((ts, i, o, cw, cr, (i * p[0] + o * p[1] + cw * p[2] + cr * p[3]) / 1e6,
-                            _field(line, SESSION_KEY) or ""))
+                            _field(line, SESSION_KEY) or "", family(model), project_name(_field(line, CWD_KEY), folder)))

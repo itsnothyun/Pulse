@@ -1,4 +1,4 @@
-"""The subtle loops -- header scanner, live pulse, CRT sweep -- drawn over a cached base frame,
+"""The subtle loops -- header scanner, live pulse, CRT sweep, the drifting ULTRA spectrum -- drawn over a cached base frame,
 so the pixel view itself only repaints when data changes. Pure Cairo; the window feeds it time."""
 import math
 
@@ -18,6 +18,9 @@ TRAIL_ALPHA = (0.25, 0.5, 0.9)                     # trail first, head last (on 
 def draw(dc, view, t, h, motion=True):
     """Paints the overlay for time `t` (seconds). Cheap: a handful of rectangles and one gradient."""
     w = view.panel_width
+    if view.live_rainbow and view.rainbow is not None:
+        dc.set_antialias(cairo.ANTIALIAS_NONE)
+        view.draw_rainbow(dc, rainbow_phase(t, motion))
     if not view.is_mini:
         _scanner(dc, view, t, motion)
         if motion:
@@ -26,6 +29,11 @@ def draw(dc, view, t, h, motion=True):
         a = 0.3 + 0.7 * (1 - math.cos(2 * math.pi * t / PIP_PERIOD)) / 2 if motion else 1.0
         dc.set_antialias(cairo.ANTIALIAS_NONE)
         px.rect(dc, Ink.alpha(Ink.ON, a), view.pip_pos[0], view.pip_pos[1], 4, 4)
+
+
+def rainbow_phase(t, motion=True):
+    """Where the ULTRA spectrum sits at time `t`: it slides one period every RAINBOW_SECONDS; still without motion."""
+    return (t % px.RAINBOW_SECONDS) / px.RAINBOW_SECONDS * px.RAINBOW_PERIOD if motion else 0.0
 
 
 def _scanner(dc, view, t, motion):

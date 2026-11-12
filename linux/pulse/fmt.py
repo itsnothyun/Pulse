@@ -59,9 +59,14 @@ def countdown(seconds):
     return f"{h}H {m % 60}M" if h > 0 else f"{m}M"
 
 
+def glyphs(text, limit):
+    """Text in the pixel font: unknown characters become spaces, anything past `limit` is cut."""
+    return "".join(c if pixelfont.has(c) else " " for c in text.upper())[:limit]
+
+
 def proc_name(name):
     """Process names in the pixel font: unknown characters become spaces."""
-    return "".join(c if pixelfont.has(c) else " " for c in name.upper())[:20]
+    return glyphs(name, 20)
 
 
 def now():

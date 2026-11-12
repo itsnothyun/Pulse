@@ -9,8 +9,10 @@ import threading
 import time
 from datetime import datetime
 
+from . import limits as plan_limits
 from . import probes
-from .claude import ClaudeStats, ClaudeUsage
+from .claude import ClaudeStats, ClaudeUsage, Slice
+from .limits import PlanLimits
 
 
 class Sampler:
@@ -30,13 +32,17 @@ class Sampler:
         self.uptime = 0.0
         self.battery = None                       # (percent, charging, on_ac)
         self.claude = ClaudeStats()
+        self.limits = PlanLimits()
+        self.limits_enabled = True                # plan limits come from Anthropic's servers; the rest stays local
         self.top = []                             # [(name, value)]
         self.clock = ""
         self.tick = False
         self.hist = {}
         self.updated = []                         # callbacks, run after every sample
         self.top_mode = None
-        self._top_busy = self._probe_busy = self._claude_busy = False
+        self._top_busy = self._probe_busy = self._claude_busy = self._limits_busy = False
+        self._limits_at = float("-inf")
+        self._limits_account = None
         self._top_probe = probes.TopProbe()
         self._claude = ClaudeUsage()
         self._prev_cpu = probes.read_cpu_times()
@@ -181,11 +187,45 @@ class Sampler:
                 self.post(done)
             threading.Thread(target=claude_work, daemon=True).start()
 
+        self._poll_limits()
+
         if self._n % 2 == 0:
             self._refresh_top()
 
         self._n += 1
         self._notify()
+
+    def _poll_limits(self):
+        """Every 5 minutes, and straight away after a /login to another account."""
+        now = time.time()
+        c = self.claude
+        if not self.limits_enabled:
+            if self.limits.ready:
+                self.limits = PlanLimits()
+            return
+        if not self.background or self._limits_busy or not c.ready:
+            return
+        if now - self._limits_at <= 300 and c.email == self._limits_account:
+            return
+        self._limits_busy = True
+        self._limits_at = now
+        if c.email != self._limits_account:
+            self.limits = PlanLimits()
+        self._limits_account = c.email
+
+        def work():
+            try:
+                result = plan_limits.read()
+            except Exception:
+                result = None
+
+            def done():
+                self._limits_busy = False
+                if result is not None and self.limits_enabled:
+                    self.limits = result
+                    self._notify()
+            self.post(done)
+        threading.Thread(target=work, daemon=True).start()
 
     def probe_sync(self):
         """Synchronous version of the background probes, for --snapshot."""
@@ -196,6 +236,8 @@ class Sampler:
             self.temp = self.temp_max = max(temps)
         self.gpu = probes.read_gpu()
         self.claude = self._claude.scan()
+        if self.limits_enabled:
+            self.limits = plan_limits.read() or self.limits
 
     def load_demo(self):
         """Plausible fake numbers for screenshots (--demo), so no real usage is published."""
@@ -226,4 +268,11 @@ class Sampler:
         self.claude = ClaudeStats(
             ready=True, week=412.6e6, today=58.3e6, block=31.9e6, output=2.41e6, cost=184.2,
             block_end=time.time() + 2 * 3600 + 14 * 60 + 30, input=9.8e6, cache_read=400.4e6,
-            sessions=9, live=1, calls=3184, today_index=3, days=[88e6, 102e6, 164e6, 58.3e6, 0, 0, 0])
+            sessions=9, live=1, calls=3184, today_index=3, days=[88e6, 102e6, 164e6, 58.3e6, 0, 0, 0],
+            email="you@example.com", plan="Max",
+            by_model=[Slice("OPUS", 301.2e6, 151.0), Slice("SONNET", 96.4e6, 30.1), Slice("HAIKU", 15.0e6, 3.1)],
+            by_project=[Slice("pulse", 188.0e6, 84.2), Slice("website", 131.5e6, 58.9), Slice("notes", 93.1e6, 41.1)],
+            by_account=[Slice("you@example.com", 352.6e6, 157.4), Slice("work@example.com", 60.0e6, 26.8)])
+        now = time.time()
+        self.limits = PlanLimits(ready=True, five=0.34, week=0.42, five_reset=now + 2 * 3600 + 14 * 60,
+                                 week_reset=now + 2 * 86400 + 3 * 3600)

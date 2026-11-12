@@ -3,6 +3,7 @@
 #                                                  ./install.sh --uninstall
 # Needs python3 with PyGObject + Cairo + GTK 3 (preinstalled on DGX OS / Ubuntu desktop):
 #   sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0
+# Optional: gir1.2-ayatanaappindicator3-0.1 for the tray icon, libnotify-bin (notify-send) for alerts.
 set -e
 cd "$(dirname "$0")"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -54,3 +55,4 @@ command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$DAT
 echo "Installed. Start it with:  pulse      (or find Pulse in your app grid)"
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) echo "Note: add ~/.local/bin to your PATH to use the 'pulse' command." ;; esac
 echo "Right-click the widget → Launch at Login to start it with your session."
+echo "Tip: bind 'pulse --click-through' to Ctrl+Alt+P in your keyboard settings to toggle click-through."
