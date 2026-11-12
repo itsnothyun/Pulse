@@ -8,6 +8,9 @@ using System.Text.Json;
 
 namespace PulseApp;
 
+/// <summary>One line of a breakdown: who or what spent the tokens.</summary>
+sealed record Slice(string Name, double Tokens, double Cost);
+
 sealed class ClaudeStats
 {
     public double Week, Input, Output, CacheWrite, CacheRead, Today;
@@ -16,6 +19,8 @@ sealed class ClaudeStats
     public int Sessions, Live, Calls, TodayIndex;
     public double[] Days = new double[7];
     public bool Ready;
+    public string? Email, Plan;          // the account Claude Code is signed in with (null = API key or signed out)
+    public List<Slice> ByModel = new(), ByProject = new(), ByAccount = new();   // this week, largest first
 }
 
 /// <summary>
@@ -25,7 +30,7 @@ sealed class ClaudeStats
 /// </summary>
 sealed class ClaudeUsage
 {
-    readonly record struct Event(double Ts, double Input, double Output, double Cw, double Cr, double Cost, string Session);
+    readonly record struct Event(double Ts, double Input, double Output, double Cw, double Cr, double Cost, string Session, string Model, string Project);
 
     /// <summary>
     /// Estimated API list price in USD per million tokens: input, output, cache write, cache read.
@@ -58,6 +63,22 @@ sealed class ClaudeUsage
     static ReadOnlySpan<byte> ReqKey => "\"requestId\":\""u8;
     static ReadOnlySpan<byte> SessionKey => "\"sessionId\":\""u8;
     static ReadOnlySpan<byte> ModelKey => "\"model\":\""u8;
+    static ReadOnlySpan<byte> CwdKey => "\"cwd\":\""u8;
+
+    static string Family(string model) =>
+        model.Contains("fable") ? "FABLE" : model.Contains("opus") ? "OPUS" : model.Contains("sonnet") ? "SONNET"
+        : model.Contains("haiku") ? "HAIKU" : "OTHER";
+
+    /// <summary>Project name: the last folder of the session's working directory, else the transcript folder.</summary>
+    static string ProjectName(string? cwd, string fallback)
+    {
+        if (cwd != null)
+        {
+            var parts = cwd.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 0) return parts[^1];
+        }
+        return fallback;
+    }
 
     static string Root()
     {
@@ -66,6 +87,81 @@ sealed class ClaudeUsage
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude")
             : cfg;
         return Path.Combine(baseDir, "projects");
+    }
+
+    /// <summary>~/.claude.json (or $CLAUDE_CONFIG_DIR/.claude.json) — rewritten by /login, so it names the current account.</summary>
+    static string ConfigFile()
+    {
+        var cfg = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
+        return string.IsNullOrEmpty(cfg)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude.json")
+            : Path.Combine(cfg, ".claude.json");
+    }
+
+    DateTime accountStamp;
+    string? email, plan;
+
+    /// <summary>
+    /// When each account was first seen signed in (unix s). Transcripts don't name the account, so tokens are
+    /// credited to whoever was signed in at the time; the first account ever seen also owns the history before it.
+    /// </summary>
+    readonly List<(double From, string Email)> accountLog = LoadAccountLog();
+
+    static string AccountLogPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Pulse", "accounts.json");
+
+    static List<(double, string)> LoadAccountLog()
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(AccountLogPath));
+            return doc.RootElement.EnumerateArray()
+                .Select(e => (e.GetProperty("from").GetDouble(), e.GetProperty("email").GetString() ?? ""))
+                .Where(e => e.Item2.Length > 0).OrderBy(e => e.Item1).ToList();
+        }
+        catch { return new(); }
+    }
+
+    void NoteAccount(string? current)
+    {
+        if (current == null || (accountLog.Count > 0 && accountLog[^1].Email == current)) return;
+        accountLog.Add((accountLog.Count == 0 ? 0 : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0, current));
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(AccountLogPath)!);
+            File.WriteAllText(AccountLogPath, JsonSerializer.Serialize(accountLog.Select(a => new { from = a.From, email = a.Email })));
+        }
+        catch { }
+    }
+
+    string AccountAt(double ts)
+    {
+        string who = accountLog.Count > 0 ? accountLog[0].Email : "UNKNOWN";
+        foreach (var (from, e) in accountLog) { if (from <= ts) who = e; else break; }
+        return who;
+    }
+
+    static List<Slice> Top(IEnumerable<Event> events, Func<Event, string> key) =>
+        events.GroupBy(key)
+              .Select(g => new Slice(g.Key, g.Sum(e => e.Input + e.Output + e.Cw + e.Cr), g.Sum(e => e.Cost)))
+              .OrderByDescending(s => s.Tokens).ToList();
+
+    /// <summary>Re-reads the signed-in account only when the config file changes.</summary>
+    void ReadAccount()
+    {
+        var fi = new FileInfo(ConfigFile());
+        if (!fi.Exists) { email = plan = null; accountStamp = default; return; }
+        if (fi.LastWriteTimeUtc == accountStamp) return;
+        try
+        {
+            using var fs = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var doc = JsonDocument.Parse(fs);
+            string? S(JsonElement o, string k) => o.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+            if (doc.RootElement.TryGetProperty("oauthAccount", out var a) && a.ValueKind == JsonValueKind.Object)
+            { email = S(a, "emailAddress"); plan = S(a, "planDisplayName"); }
+            else email = plan = null;
+            accountStamp = fi.LastWriteTimeUtc;
+        }
+        catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { /* mid-write — next pass */ }
     }
 
     public ClaudeStats Scan()
@@ -90,11 +186,18 @@ sealed class ClaudeUsage
             catch { files = Array.Empty<string>(); }
             foreach (var path in files)
             {
-                try { live += ReadFile(path, ws, now); } catch { /* file vanished or locked — next pass */ }
+                try { live += ReadFile(path, root, ws, now); } catch { /* file vanished or locked — next pass */ }
             }
         }
 
-        var st = new ClaudeStats { Ready = true, Live = live, Calls = events.Count, TodayIndex = sinceMonday };
+        ReadAccount();
+        NoteAccount(email);
+        var st = new ClaudeStats
+        {
+            Ready = true, Live = live, Calls = events.Count, TodayIndex = sinceMonday, Email = email, Plan = plan,
+            ByModel = Top(events, e => e.Model), ByProject = Top(events, e => e.Project),
+            ByAccount = Top(events, e => AccountAt(e.Ts)),
+        };
         double dayStart = new DateTimeOffset(now.Date, now.Offset).ToUnixTimeMilliseconds() / 1000.0;
         var sessions = new HashSet<string>();
         foreach (var e in events)
@@ -122,8 +225,10 @@ sealed class ClaudeUsage
     }
 
     /// <summary>Reads new bytes of one transcript; returns 1 if it looks like a live session.</summary>
-    int ReadFile(string path, double ws, DateTimeOffset now)
+    int ReadFile(string path, string root, double ws, DateTimeOffset now)
     {
+        var rel = Path.GetRelativePath(root, path);
+        string folder = rel.Split(Path.DirectorySeparatorChar)[0];
         var fi = new FileInfo(path);
         var mod = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds() / 1000.0;
         if (mod < ws) return 0;
@@ -150,7 +255,7 @@ sealed class ClaudeUsage
             while (span.Length > 0)
             {
                 int nl = span.IndexOf((byte)'\n');
-                Ingest(span[..nl], ws);
+                Ingest(span[..nl], ws, folder);
                 span = span[(nl + 1)..];
             }
             consumed += lastNl + 1;
@@ -170,7 +275,7 @@ sealed class ClaudeUsage
         return end < 0 ? null : Encoding.UTF8.GetString(rest[..end]);
     }
 
-    void Ingest(ReadOnlySpan<byte> line, double ws)
+    void Ingest(ReadOnlySpan<byte> line, double ws, string folder)
     {
         // Cheap field extraction — lines can be megabytes, so avoid parsing the whole record.
         int u = line.IndexOf(UsageKey);
@@ -197,8 +302,10 @@ sealed class ClaudeUsage
             var r = doc.RootElement;
             double N(string k) => r.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : 0;
             double i = N("input_tokens"), o = N("output_tokens"), cw = N("cache_creation_input_tokens"), cr = N("cache_read_input_tokens");
-            var p = Price(Field(line, ModelKey) ?? "");
-            events.Add(new Event(ts, i, o, cw, cr, (i * p[0] + o * p[1] + cw * p[2] + cr * p[3]) / 1e6, Field(line, SessionKey) ?? ""));
+            var model = Field(line, ModelKey) ?? "";
+            var p = Price(model);
+            events.Add(new Event(ts, i, o, cw, cr, (i * p[0] + o * p[1] + cw * p[2] + cr * p[3]) / 1e6, Field(line, SessionKey) ?? "",
+                                 Family(model), ProjectName(Field(line, CwdKey), folder)));
         }
         catch (JsonException) { }
     }

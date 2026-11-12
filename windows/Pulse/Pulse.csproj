@@ -4,6 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- DPI awareness comes from app.manifest (this is a WPF app; WinForms only supplies the tray icon) -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -15,7 +18,8 @@
     <Version>1.2.0</Version>
     <Product>Pulse</Product>
     <Description>Monochrome pixel system monitor widget</Description>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- not invariant: WPF text (tooltips, menus) needs real cultures for font layout -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <!-- lets the project compile on macOS/Linux too (it only runs on Windows) -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>

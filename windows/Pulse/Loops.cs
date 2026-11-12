@@ -24,7 +24,7 @@ sealed class Loops
     readonly Rectangle sweep = new() { Height = 80 };
     readonly TranslateTransform sweepMove = new();
     bool? hot;
-    double sweepHeight = -1;
+    double sweepHeight = -1, clipWidth = -1;
 
     public Loops(PulseView view)
     {
@@ -57,7 +57,6 @@ sealed class Loops
             g.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 255, 255), 1));
             g.Freeze();
             sweep.Fill = g;
-            sweep.Width = PulseView.FullW;
             sweep.RenderTransform = sweepMove;
             Canvas.Children.Add(sweep);
         }
@@ -81,10 +80,12 @@ sealed class Loops
         scanner.Visibility = view.IsMini ? Visibility.Collapsed : Visibility.Visible;
         sweep.Visibility = view.IsMini ? Visibility.Collapsed : Visibility.Visible;   // mini stays still
 
+        sweep.Width = view.PanelWidth;
         double h = view.ActualHeight;
-        if (h > 0 && Math.Abs(h - sweepHeight) > 0.5)
+        if (h > 0 && (Math.Abs(h - sweepHeight) > 0.5 || view.PanelWidth != clipWidth))
         {
             sweepHeight = h;
+            clipWidth = view.PanelWidth;
             Canvas.Clip = new RectangleGeometry(new Rect(0, 0, view.PanelWidth, h), view.Radius, view.Radius);
             if (motion)
                 sweepMove.BeginAnimation(TranslateTransform.YProperty,

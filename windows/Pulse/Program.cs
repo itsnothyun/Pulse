@@ -18,18 +18,33 @@ public static class Program
         {
             int t = Array.IndexOf(args, "--top");
             TopMode? top = t >= 0 && t + 1 < args.Length ? (args[t + 1] == "mem" ? TopMode.Mem : TopMode.Cpu) : null;
-            return Snapshot(args[i + 1], args.Contains("--mini") ? WidgetSize.Mini : args.Contains("--compact") ? WidgetSize.Compact : WidgetSize.Full, args.Contains("--demo"), top);
+            return Snapshot(args[i + 1], args.Contains("--mini") ? WidgetSize.Mini : args.Contains("--compact") ? WidgetSize.Compact
+                : args.Contains("--landscape") ? WidgetSize.Landscape : args.Contains("--claude") ? WidgetSize.Claude : WidgetSize.Full,
+                args.Contains("--demo"), top, args.Contains("--open"));
         }
 
         using var single = new Mutex(true, "Pulse.Widget.SingleInstance", out bool first);
         if (!first) return 0;                     // already running
 
         var app = new Application { ShutdownMode = ShutdownMode.OnMainWindowClose };
+        // a widget that vanishes is worse than one that skips a frame: log UI errors and keep running
+        app.DispatcherUnhandledException += (_, e) => { Log(e.Exception); e.Handled = true; };
         return app.Run(new WidgetWindow());
     }
 
+    static void Log(Exception ex)
+    {
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Pulse");
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "crash.log"), $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {ex}\n\n");
+        }
+        catch { }
+    }
+
     /// <summary>Renders the widget to a PNG without opening a window (debug aid, used by CI).</summary>
-    static int Snapshot(string path, WidgetSize size, bool demo, TopMode? top)
+    static int Snapshot(string path, WidgetSize size, bool demo, TopMode? top, bool open)
     {
         var s = new Sampler(start: false);
         if (demo) { if (top is { } dm) s.TopSync(dm); s.LoadDemo(); }
@@ -39,7 +54,11 @@ public static class Program
             s.ProbeSync();
             if (top is { } m) s.TopSync(m);
         }
-        var v = new PulseView(s) { Size = size };
+        // tooltips and menus use real WPF text: lay a line out so a broken font/culture setup fails here, not on hover
+        var probe = new System.Windows.Controls.TextBlock { Text = "3,421,887,102 tokens", FontFamily = new FontFamily("Cascadia Mono, Consolas") };
+        probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+
+        var v = new PulseView(s) { Size = size, ClaudeOpen = open };
         v.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         v.Arrange(new Rect(v.DesiredSize));
         v.UpdateLayout();

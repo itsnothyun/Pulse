@@ -18,6 +18,13 @@ sealed class Settings
         set { Size = value.ToString(); Compact = false; }
     }
     public bool OnTop { get; set; } = true;
+    public double Scale { get; set; } = 1;
+    public double Opacity { get; set; } = 1;
+    public bool Alerts { get; set; } = true;
+    public bool Limits { get; set; } = true;
+    public bool ClaudeOpen { get; set; }
+    /// <summary>Where each view lives, keyed by monitor arrangement and view.</summary>
+    public System.Collections.Generic.Dictionary<string, double[]> Positions { get; set; } = new();
 
     static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Pulse", "settings.json");
 

@@ -19,6 +19,9 @@ sealed class Sampler
     public int Procs, Threads;
     public (int Pct, bool Charging, bool Ac)? Battery;
     public ClaudeStats Claude = new();
+    public PlanLimits Limits = new();
+    /// <summary>Plan limits come from Anthropic's servers; everything else stays on this machine.</summary>
+    public bool LimitsEnabled = true;
     public List<TopProc> Top = new();
     TopMode? topMode;
     bool topBusy;
@@ -61,6 +64,10 @@ sealed class Sampler
     readonly Thermals thermals = new();
     readonly GpuProbe gpu = new();
     readonly ClaudeUsage claude = new();
+    readonly LimitsProbe limits = new();
+    bool limitsBusy;
+    double limitsAt = double.NegativeInfinity;
+    string? limitsAccount;
     (long Idle, long Kernel, long User)[] prevCpu;
     (long In, long Out) prevNet;
     DateTime prevNetTime = DateTime.UtcNow;
@@ -158,6 +165,22 @@ sealed class Sampler
             }));
         }
 
+        // every 5 minutes, and straight away after a /login to another account
+        double nowS = F.Now;
+        if (LimitsEnabled && !limitsBusy && Claude.Ready && (nowS - limitsAt > 300 || Claude.Email != limitsAccount))
+        {
+            limitsBusy = true;
+            limitsAt = nowS;
+            if (Claude.Email != limitsAccount) Limits = new();
+            limitsAccount = Claude.Email;
+            limits.Read().ContinueWith(r => dispatcher.BeginInvoke(() =>
+            {
+                limitsBusy = false;
+                if (r.IsCompletedSuccessfully && r.Result is { } l) { Limits = l; Updated?.Invoke(); }
+            }));
+        }
+        else if (!LimitsEnabled && Limits.Ready) Limits = new();
+
         if (n % 2 == 0) RefreshTop();
 
         n++;
@@ -170,6 +193,7 @@ sealed class Sampler
         if (thermals.Read() is { } v) { Temp = v.Value; TempMax = v.Max; }
         Gpu = gpu.Read();
         Claude = claude.Scan();
+        if (LimitsEnabled && limits.Read().GetAwaiter().GetResult() is { } l) Limits = l;
     }
 
     /// <summary>Plausible fake numbers for screenshots (--demo), so no real usage is published.</summary>
@@ -199,6 +223,16 @@ sealed class Sampler
             BlockEnd = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0 + 2 * 3600 + 14 * 60 + 30,
             Input = 9.8e6, CacheRead = 400.4e6, Sessions = 9, Live = 1, Calls = 3184, TodayIndex = 3,
             Days = new[] { 88e6, 102e6, 164e6, 58.3e6, 0, 0, 0 },
+            Email = "you@example.com", Plan = "Max",
+            ByModel = new() { new("OPUS", 301.2e6, 151.0), new("SONNET", 96.4e6, 30.1), new("HAIKU", 15.0e6, 3.1) },
+            ByProject = new() { new("pulse", 188.0e6, 84.2), new("website", 131.5e6, 58.9), new("notes", 93.1e6, 41.1) },
+            ByAccount = new() { new("you@example.com", 352.6e6, 157.4), new("work@example.com", 60.0e6, 26.8) },
+        };
+        Limits = new PlanLimits
+        {
+            Ready = true, Five = 0.34, Week = 0.42,
+            FiveReset = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0 + 2 * 3600 + 14 * 60,
+            WeekReset = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0 + 2 * 86400 + 3 * 3600,
         };
     }
 }
