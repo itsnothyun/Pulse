@@ -54,6 +54,7 @@ sealed class Tweens
     readonly Dictionary<string, T> map = new();
     readonly Stopwatch clock = Stopwatch.StartNew();
     const double Dur = 0.45;
+    const double Settled = double.NegativeInfinity;   // a tween that isn't moving (now - start can't round under Dur)
     public bool Active { get; private set; }
 
     public void BeginFrame() => Active = false;
@@ -61,11 +62,11 @@ sealed class Tweens
     public double Get(string key, double target, int segments)
     {
         double now = clock.Elapsed.TotalSeconds;
-        if (!map.TryGetValue(key, out var t)) { map[key] = new T(target, target, now - Dur); return target; }
+        if (!map.TryGetValue(key, out var t)) { map[key] = new T(target, target, Settled); return target; }
         if (target != t.To)
         {
             double cur = Eval(t, now);
-            t = Seg(cur, segments) != Seg(target, segments) ? new T(cur, target, now) : new T(target, target, now - Dur);
+            t = Seg(cur, segments) != Seg(target, segments) ? new T(cur, target, now) : new T(target, target, Settled);
             map[key] = t;
         }
         if (now - t.Start < Dur) Active = true;

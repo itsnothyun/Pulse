@@ -50,6 +50,7 @@ def one_decimal(v):
 class Tweens:
     """Bars tween only when they gain or lose a segment, so idle frames cost nothing."""
     DUR = 0.45
+    SETTLED = float("-inf")             # start time of a tween that isn't moving (now - start can't round under DUR)
 
     def __init__(self):
         self.map = {}
@@ -71,14 +72,14 @@ class Tweens:
         now = time.monotonic()
         t = self.map.get(key)
         if t is None:
-            self.map[key] = (target, target, now - self.DUR)
+            self.map[key] = (target, target, self.SETTLED)
             return target
         if target != t[1]:
             cur = self._eval(t, now)
             if self._seg(cur, segments) != self._seg(target, segments):
                 t = (cur, target, now)
             else:
-                t = (target, target, now - self.DUR)
+                t = (target, target, self.SETTLED)
             self.map[key] = t
         if now - t[2] < self.DUR:
             self.active = True
