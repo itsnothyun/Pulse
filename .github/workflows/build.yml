@@ -32,6 +32,10 @@ jobs:
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-compact.png','--demo','--compact' -Wait
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-mini.png','--demo','--mini' -Wait
           if (-not (Test-Path snapshot-windows-mini.png)) { throw "mini snapshot failed" }
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-landscape.png','--demo','--landscape' -Wait
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-claude.png','--demo','--claude' -Wait
+          Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-breakdown.png','--demo','--open' -Wait
+          if (-not (Test-Path snapshot-windows-claude.png)) { throw "view snapshots failed" }
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-top-cpu.png','--top','cpu' -Wait
           Start-Process out/Pulse.exe -ArgumentList '--snapshot','snapshot-windows-top-mem.png','--top','mem' -Wait
           if (-not (Test-Path snapshot-windows-top-mem.png)) { throw "top snapshot failed" }
@@ -56,6 +60,8 @@ jobs:
           dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos.png --demo
           dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-mini.png --demo --mini
           dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-top.png --top cpu
+          dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-landscape.png --demo --landscape
+          dist/Pulse.app/Contents/MacOS/Pulse --snapshot snapshot-macos-claude.png --demo --claude
       - name: Zip
         run: ditto -c -k --keepParent dist/Pulse.app Pulse-macos-universal.zip
       - uses: actions/upload-artifact@v4

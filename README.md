@@ -30,7 +30,7 @@
 | **Network** | download / upload per second |
 | **Swap / Commit** | swap on macOS and Linux, commit charge on Windows |
 | **Power** | battery %, charging state |
-| **Claude Code** | tokens this week (Mon–Sun chart), today, current 5‑hour block with a reset countdown, estimated cost, sessions, live sessions |
+| **Claude Code** | signed-in account and plan (follows `/login`), tokens this week (Mon–Sun chart), today, current 5‑hour block with a reset countdown, estimated cost, sessions, live sessions |
 
 Everything is drawn with a hand-made 5×7 pixel font — no system fonts, no images.
 Subtle loops (a header scanner, a breathing *live* pixel, a slow CRT sweep) run on the
@@ -76,10 +76,23 @@ unified pool, and the Power tile reads `AC · NO BATTERY`. `./install.sh --unins
 
 ## Use
 
-- **Drag** anywhere to move it — the position is remembered.
-- **Click the header** to step through three sizes: **Full** (everything), **Compact** (CPU, memory, temperature, disk) and **Mini** (one quiet line, no motion).
-- **Click CPU or MEM** (Full size) to list the three processes using the most; click again to close.
-- **Right-click** for *Size*, *Always on Top*, *Launch at Login*, Activity Monitor / Task Manager / System Monitor, *Quit*.
+- **Drag** anywhere to move it. Dropped near a screen edge, corner or the centre line, it glides onto it.
+- **Views** — like a phone widget, pick the shape that fits the spot:
+  **Full** (everything), **Landscape** (system on the left, Claude on the right — for the top of a wide screen),
+  **Claude** (account, limits, this week and where the tokens went), **Compact** (CPU, memory, temperature, disk)
+  and **Mini** (one quiet line, no motion). *Right-click → View → Choose View…* opens a gallery of live previews;
+  clicking the header steps through them. Each view remembers its own position, per monitor arrangement, so
+  switching views can move the widget to where that view lives.
+- **Resize** by dragging the bottom corner (the one away from the screen edge it's pinned to), with
+  **Ctrl + scroll**, or from *Scale* (100–200%). Size and view changes morph smoothly; with reduced motion they're instant.
+- **Hover** any number for its exact value.
+- **Click CPU or MEM** (Full) to list the three processes using the most; **click the Claude section** (Full,
+  Landscape) for tokens by model, project and account. Click again to close.
+- **Right-click** for *View*, *Scale*, *Opacity*, *Always on Top*, *Click-through*, *Alerts*, *Plan Limits*,
+  *Launch at Login*, Activity Monitor / Task Manager / System Monitor, *Hide to Tray*, *Quit*.
+- **Click-through** lets clicks pass to whatever is underneath. Turn it off with **Ctrl+Alt+P** (⌃⌥P on macOS) or the tray icon.
+- **Alerts** notify you when the CPU runs hot or memory is nearly full for 30 seconds, when your 5-hour block
+  resets, and when a plan limit passes 80% and 95%.
 
 ## Claude Code usage
 
@@ -95,8 +108,17 @@ and each pass reads only the bytes appended since the last one, so after the fir
   cache read). On a subscription you don't pay per token, so treat it as value, not a bill. The rates are one
   table (`ClaudeUsage.prices` in `macos/Pulse.swift`, `Prices` in `windows/Pulse/ClaudeUsage.cs`, `PRICES` in `linux/pulse/claude.py`); unknown models count as $0.
 - **Live** = sessions whose transcript changed in the last 5 minutes.
-- It counts Claude Code only (not the Claude desktop or web apps) and can't see plan limits.
-- Nothing leaves your machine — Pulse makes no network requests.
+- **Account** = the claude.ai account Claude Code is signed in with, read from `~/.claude.json`, so it follows
+  `/login`. Transcripts don't record the account, so *by account* credits tokens to whoever was signed in when
+  Pulse saw them; the first account Pulse ever sees also owns the history before it.
+- **By project** uses the last folder of each session's working directory.
+- It counts Claude Code only (not the Claude desktop or web apps).
+
+**Plan limits** are the one thing that touches the network. Pulse asks Anthropic for the same numbers
+Claude Code's `/usage` shows (`api.anthropic.com/api/oauth/usage`), every five minutes, with the sign-in token
+Claude Code already keeps (`~/.claude/.credentials.json`; the Keychain on macOS). It only reads — it never
+refreshes or stores the token — and nothing else is sent. Turn it off with *Right-click → Plan Limits (online)*;
+everything else stays on your machine.
 
 ## Website
 
