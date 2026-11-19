@@ -1,6 +1,6 @@
 // Pulse marketing site — the widget is re-drawn here from the app's own font and layout,
 // fed by one synthetic feed so every copy on the page agrees.
-import { GLYPHS } from './glyphs.js';
+import { GLYPHS } from './glyphs.js?v=25';
 
 const INK = { bg: '#090909', on: '#F2F2ED', mid: '#B3B3AD', dim: '#757573', off: '#262626', line: '#303030' };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));

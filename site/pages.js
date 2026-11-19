@@ -1,21 +1,22 @@
 // The smaller Pulse pages (Pulse Explorer, Ecosystem): pixel headings, the nav shadow and
 // copy buttons, without the widget simulation that pulse.js runs on the landing page.
-import { GLYPHS } from './glyphs.js';
+import { GLYPHS } from './glyphs.js?v=25';
 
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 
 /** <span data-pixel="LINE ONE|LINE TWO"> becomes crisp SVG; the real text stays for assistive tech. */
-function pixelSVG(line, dot, gap, assemble) {
+function pixelSVG(line, dot, gap, assemble, mixed = false) {
+  const R = mixed ? 9 : 7;
   const cols = Math.max(line.length * 6 - 1, 1);
-  const w = cols * dot, h = 7 * dot, s = dot - gap;
+  const w = cols * dot, h = R * dot, s = dot - gap;
   let body = '';
-  const t = line.toUpperCase();
+  const t = mixed ? line : line.toUpperCase();
   for (let i = 0; i < t.length; i++) {
     const rows = GLYPHS[t[i]];
     if (!rows) continue;
-    for (let r = 0; r < 7; r++)
+    for (let r = 0; r < R; r++)
       for (let c = 0; c < 5; c++)
-        if (rows[r] & (0x10 >> c)) {
+        if ((rows[r] || 0) & (0x10 >> c)) {
           const x = (i * 6 + c) * dot, y = r * dot;
           body += assemble
             ? `<rect x="${x}" y="${y}" width="${s}" height="${s}" style="animation-delay:${Math.round(Math.random() * 520 + c * 18 + i * 14)}ms"/>`
@@ -34,7 +35,7 @@ function mountPixel(el) {
   const dot = Math.max(1.5, Math.min(want, Math.floor((box / cols) * 4) / 4));
   const gap = dot >= 6 ? Math.round(dot * 0.12 * 4) / 4 : 0;
   const assemble = el.hasAttribute('data-assemble') && !el.dataset.done && !motionQuery.matches;
-  el.innerHTML = lines.map((l) => `<span class="px-line">${pixelSVG(l, dot, gap, assemble)}</span>`).join('');
+  el.innerHTML = lines.map((l) => `<span class="px-line">${pixelSVG(l, dot, gap, assemble, el.hasAttribute('data-case'))}</span>`).join('');
   if (assemble) { el.classList.add('assembling'); el.dataset.done = '1'; }
 }
 

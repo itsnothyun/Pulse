@@ -590,7 +590,7 @@ canvas.on-row { cursor: pointer !important; }
    for the wordmark, eyebrows, keys and live numbers. Each heading keeps a visually-hidden .sr span (the
    real text) and an aria-hidden pixel span, so flipping which one shows is pure CSS and every page follows. */
 body { font-family: var(--body); font-optical-sizing: auto; font-weight: 400; }
-h1 > .px-hero, h2 > .px-h2, h2 > .px-close, h3 > .px-product { display: none; }
+h1 > .px-hero, h2 > .px-h2, h2 > .px-close { display: none; }
 h1 > .sr, h2 > .sr, h3 > .sr {
   position: static; width: auto; height: auto; margin: 0; padding: 0; overflow: visible; clip: auto; white-space: normal;
   display: block; color: var(--on); font-family: var(--display); text-wrap: balance;
@@ -698,5 +698,7 @@ code, .mono { font-family: var(--mono); font-size: 0.84em; letter-spacing: 0; }
 .footer-inner p, .footer ul a { text-shadow: 0 0 14px #090909, 0 0 4px #090909; }
 .close { padding-bottom: 0; }
 
-/* product titles are real text in normal case; the pixel copy is not shown */
-h3 > .px.px-product, .feat h3 > .px-product { display: none !important; }
+/* product titles: the pixel font in normal case (lowercase glyphs are 5x9); the real text stays for screen readers only */
+h3 > .sr:has(+ .px-product) {
+  position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; display: block;
+}

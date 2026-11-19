@@ -1,7 +1,7 @@
 // The notch island on the front page: a live, looping demo of the desktop dock. It runs the same
 // three states as the apps (closed pill → ears with a read-out → open panel) with made-up numbers,
 // so nothing real is shown. Hover or focus pins it open; Reduce Motion gets the open panel, still.
-import { GLYPHS } from './glyphs.js';
+import { GLYPHS } from './glyphs.js?v=25';
 
 const notch = document.querySelector('[data-notch]');
 if (notch) {
