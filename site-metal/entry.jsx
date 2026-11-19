@@ -8,12 +8,14 @@ import { MetalFx, isMetalFxSupported } from 'metal-fx';
 const still = matchMedia('(prefers-reduced-motion: reduce)');
 
 function Metal({ btn }) {
+  // buttons are pills now: the ring's radius is half the button's height (the token --r-pill, measured)
+  const radius = Math.round((btn.getBoundingClientRect().height || 52) / 2);
   return (
     <MetalFx
       preset="silver"
       theme="dark"
       variant="button"
-      borderRadius={4}
+      borderRadius={radius}
       normalizeHostStyles={false}
       strength={btn.classList.contains('btn-primary') ? 1 : 0.8}
       innerShadow={btn.classList.contains('btn-primary')}
