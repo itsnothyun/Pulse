@@ -168,3 +168,37 @@
 @media (max-width: 1100px) { .notch-rig { --k: 1.12; } }
 @media (max-width: 480px) { .notch-rig { --k: 0.82; } }
 @media (prefers-reduced-motion: reduce) { .notch, .notch-body, .notch::before, .notch::after, .notch-open, .notch-ears { transition: none !important; } .ear .live { animation: none; } }
+
+/* ================================================================ story, open source, how-to (v19) */
+.story-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(32px, 7vw, 120px); align-items: start; }
+.story-head { position: sticky; top: 110px; }
+.story-body { display: flex; flex-direction: column; gap: 22px; max-width: 58ch; }
+.story-body p { font-size: 18px; line-height: 1.65; color: var(--mid); }
+.story-body .story-lede { font-size: clamp(22px, 2.3vw, 30px); line-height: 1.3; letter-spacing: -0.015em; font-weight: 400; color: var(--on); }
+@media (max-width: 900px) { .story-grid { grid-template-columns: minmax(0, 1fr); } .story-head { position: static; } }
+
+.os-grid { margin-top: 0; }
+.os-build { margin-top: clamp(40px, 5vw, 72px); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px 40px; align-items: end; }
+.codeblock { margin: 0; padding: 22px 26px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg-2); overflow-x: auto; font: 400 14px/1.8 var(--mono); color: var(--on); }
+.codeblock code { font: inherit; color: inherit; font-size: inherit; }
+.codeblock .c-dim { color: var(--ink-dim); }
+@media (max-width: 800px) { .os-build { grid-template-columns: minmax(0, 1fr); } }
+
+.how-steps { list-style: none; margin: var(--space-block) 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.how-steps li { padding: 32px 28px 8px 0; position: relative; }
+.how-steps li + li { padding-left: 28px; border-left: 1px solid var(--line); }
+.how-steps .px-step { --dot: 5px; margin-bottom: 28px; color: var(--on); }
+.how-steps h3 { margin-bottom: 10px; font-size: 22px; }
+.how-steps p { font-size: 16px; line-height: 1.55; color: var(--text-dim); }
+.how-steps li:hover .px-step { color: #fff; }
+.how-cta { margin-top: clamp(40px, 5vw, 64px); }
+@media (max-width: 980px) {
+  .how-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .how-steps li:nth-child(3) { padding-left: 0; border-left: 0; }
+  .how-steps li:nth-child(n+3) { border-top: 1px solid var(--line); margin-top: 24px; }
+}
+@media (max-width: 560px) {
+  .how-steps { grid-template-columns: minmax(0, 1fr); }
+  .how-steps li, .how-steps li + li { padding: 28px 0 8px; border-left: 0; }
+  .how-steps li + li { border-top: 1px solid var(--line); }
+}

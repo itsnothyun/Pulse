@@ -16,7 +16,7 @@
   <link rel="preload" href="/fonts/GoogleSansFlex-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css?v=22">
   <link rel="stylesheet" href="/subpages.css?v=15">
-  <link rel="stylesheet" href="/home.css?v=24">
+  <link rel="stylesheet" href="/home.css?v=25">
   <script type="module" src="/pages.js?v=15"></script>
   <script type="module" src="/orbit.js?v=16"></script>
   <script type="module" src="/metal.js?v=16"></script>
@@ -39,8 +39,8 @@
       <nav aria-label="Sections">
         <ul class="nav-links">
           <li><a href="#products">Products</a></li>
-          <li><a href="#shared">How they fit</a></li>
-          <li><a href="https://github.com/itsnothyun">GitHub</a></li>
+          <li><a href="#why">Why</a></li>
+          <li><a href="#open-source">Open source</a></li>
         </ul>
       </nav>
       <a class="btn btn-star btn-small" href="/app/sync/"><span>Sign in</span></a>
@@ -166,6 +166,78 @@
           <div><h3>One sign-in.</h3><p>A Pulse account opens both Pulse-Sync and Pulse Track.</p></div>
           <div><h3>Local where it can be.</h3><p>Pulse, Pulse Explorer and Pulse Connect all run on your own hardware. The Pulse widget makes no network requests at all.</p></div>
           <div><h3>One design.</h3><p>A monochrome palette, a 5×7 pixel font and the same quiet loops, from the desktop widget to the office TV.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section story" id="why" aria-labelledby="why-title">
+      <div class="wrap story-grid">
+        <div class="story-head">
+          <p class="eyebrow" aria-hidden="true"><span class="scan" aria-hidden="true"><i></i><i></i><i></i></span><span class="px px-eye" data-pixel="WHY"></span></p>
+          <h2 id="why-title" class="h2"><span class="sr">Built because nothing <em>looked right.</em></span></h2>
+        </div>
+        <div class="story-body">
+          <p class="story-lede">We wanted to see how a machine is doing without opening a window that looks like a spreadsheet.</p>
+          <p>Activity Monitor and Task Manager are made for diagnosis. We wanted the opposite: a small, quiet thing that sits on the desktop all day and answers one question, <b>is everything fine?</b></p>
+          <p>Then Claude Code became part of the day, and with it a new question: how much of the week is gone? Pulse reads Claude Code's own transcripts on your machine and keeps a running tally, so the answer is always in view.</p>
+          <p>The rest of the family followed the same idea. Servers, teams and networks get the same monochrome look and the same restraint: show what matters, then get out of the way.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="open-source" aria-labelledby="os-title">
+      <div class="wrap">
+        <p class="eyebrow" aria-hidden="true"><span class="scan" aria-hidden="true"><i></i><i></i><i></i></span><span class="px px-eye" data-pixel="OPEN SOURCE"></span></p>
+        <h2 id="os-title" class="h2"><span class="sr">Free, and <em>open to read.</em></span></h2>
+        <div class="shared os-grid">
+          <div><h3>MIT licensed.</h3><p>Pulse is free to use, change and share. There is no paid tier and no account to create.</p></div>
+          <div><h3>Nothing hidden.</h3><p>The macOS app is one Swift project and the Windows app is one C# project. The usage numbers come from files already on your machine.</p></div>
+          <div><h3>Yours to improve.</h3><p>Found a bug, want another metric, or a view of your own? Open an issue or send a pull request.</p></div>
+        </div>
+        <div class="os-build">
+          <pre class="codeblock" aria-label="Build from source"><code><span class="c-dim"># macOS</span>
+git clone https://github.com/itsnothyun/Pulse
+cd Pulse/macos &amp;&amp; ./build.sh
+
+<span class="c-dim"># Windows</span>
+dotnet build -c Release windows/Pulse</code></pre>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/itsnothyun/Pulse"><span>View on GitHub</span></a>
+            <a class="btn btn-ghost" href="https://github.com/itsnothyun/Pulse/issues"><span>Report an issue</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <p class="eyebrow" aria-hidden="true"><span class="scan" aria-hidden="true"><i></i><i></i><i></i></span><span class="px px-eye" data-pixel="HOW TO USE IT"></span></p>
+        <h2 id="how-title" class="h2"><span class="sr">Up and running <em>in a minute.</em></span></h2>
+        <ol class="how-steps">
+          <li>
+            <span class="px px-step" data-pixel="01" aria-hidden="true"></span>
+            <h3>Download it.</h3>
+            <p>Get the macOS or Windows build from the latest release. There is no installer and no sign-up.</p>
+          </li>
+          <li>
+            <span class="px px-step" data-pixel="02" aria-hidden="true"></span>
+            <h3>Open it.</h3>
+            <p>On a Mac, drag Pulse to Applications and open it (the install section has the one command macOS may ask for). On Windows, run <code>Pulse.exe</code>.</p>
+          </li>
+          <li>
+            <span class="px px-step" data-pixel="03" aria-hidden="true"></span>
+            <h3>Pick a design.</h3>
+            <p>Open <b>Choose View</b> from the menu bar or tray: Full, Landscape, Claude, Compact, Mini, or the <b>Notch</b> at the top of your screen. Hover the notch to open it.</p>
+          </li>
+          <li>
+            <span class="px px-step" data-pixel="04" aria-hidden="true"></span>
+            <h3>Watch your week.</h3>
+            <p>If you use Claude Code there is nothing to connect. Pulse picks up your tokens, the five-hour block and the reset countdown, and can warn you before a limit.</p>
+          </li>
+        </ol>
+        <div class="cta-row how-cta">
+          <a class="btn btn-primary" href="/pulse/#install"><span>Download Pulse</span></a>
+          <a class="btn btn-ghost" href="/pulse/"><span>More about Pulse</span></a>
         </div>
       </div>
     </section>
