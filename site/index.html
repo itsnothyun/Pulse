@@ -13,14 +13,15 @@
   <meta property="og:title" content="The Pulse ecosystem">
   <meta property="og:description" content="Five tools for your servers, your team, your network and your desktop, in one monochrome design.">
   <meta property="og:image" content="/img/og.png">
-  <link rel="preload" href="/fonts/SchibstedGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/style.css?v=13">
-  <link rel="stylesheet" href="/subpages.css?v=13">
-  <link rel="stylesheet" href="/home.css?v=13">
-  <script type="module" src="/pages.js?v=13"></script>
-  <script type="module" src="/orbit.js?v=13"></script>
-  <script type="module" src="/metal.js?v=13"></script>
-  <script type="module" src="/home.js?v=13"></script>
+  <link rel="preload" href="/fonts/BricolageGrotesque-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css?v=14">
+  <link rel="stylesheet" href="/subpages.css?v=14">
+  <link rel="stylesheet" href="/home.css?v=14">
+  <script type="module" src="/pages.js?v=14"></script>
+  <script type="module" src="/orbit.js?v=14"></script>
+  <script type="module" src="/metal.js?v=14"></script>
+  <script type="module" src="/home.js?v=14"></script>
+  <script type="module" src="/notch.js?v=14"></script>
 </head>
 <body class="home">
   <a class="skip" href="#main">Skip to content</a>
@@ -44,23 +45,33 @@
   </header>
 
   <main id="main">
-    <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="hero-stage">
-        <canvas class="orbit" data-orbit aria-hidden="true"></canvas>
-        <div class="wrap hero-inner">
-          <h1 id="hero-title" class="hero-title">
-            <span class="sr">Pulse Ecosystem</span>
-            <span class="px px-hero" data-pixel="PULSE|ECOSYSTEM" data-assemble aria-hidden="true"></span>
-          </h1>
-          <div class="hero-copy">
-            <p class="lede">Five quiet tools for your servers, your team, your network and your desktop. Sign in, open or install any of them from here.</p>
-            <div class="cta-row">
-              <a class="btn btn-primary" href="#products"><span>See all five</span></a>
-              <a class="btn btn-ghost" href="/app/sync/"><span>Sign in</span></a>
-            </div>
-            <p class="meta">Monochrome · one design · two on the web, one on your network, two on your computer</p>
-          </div>
+    <section class="hero desk" id="top" aria-labelledby="hero-title">
+      <div class="desk-scene" aria-hidden="true">
+        <canvas class="orbit" data-orbit></canvas>
+        <div class="desk-glow"></div>
+      </div>
+
+      <!-- the notch island, running live (and on a loop until you touch it) -->
+      <div class="notch-rig">
+        <div class="notch" data-notch data-state="closed" tabindex="0" role="group" aria-label="Pulse notch island demo: hover or focus to open">
+          <span class="notch-body"></span>
+          <div class="notch-ears" data-ears aria-hidden="true"></div>
+          <div class="notch-open" data-open aria-hidden="true"></div>
         </div>
+      </div>
+
+      <div class="wrap hero-center">
+        <img class="hero-icon" src="/img/icon.png" width="64" height="64" alt="">
+        <h1 id="hero-title" class="hero-title">
+          <span class="sr">Monitoring that stays <em>out of the way.</em></span>
+          <span class="px px-hero" data-pixel="PULSE|ECOSYSTEM" aria-hidden="true"></span>
+        </h1>
+        <p class="lede">Five quiet tools for your servers, your team, your network and your desktop. The desktop widget now lives in your notch.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="/pulse/#install"><svg class="i" viewBox="0 0 7 7" aria-hidden="true"><path d="M3 0h1v4h1v-1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v1h1z"/><path d="M0 6h7v1h-7z"/></svg><span>Get Pulse for desktop</span></a>
+          <a class="btn btn-ghost btn-lg" href="#products"><span>See all five</span></a>
+        </div>
+        <p class="caption">Free to start. No card. macOS and Windows.</p>
       </div>
     </section>
 
@@ -68,7 +79,7 @@
       <div class="wrap">
         <p class="eyebrow" aria-hidden="true"><span class="scan" aria-hidden="true"><i></i><i></i><i></i></span><span class="px px-eye" data-pixel="PRODUCTS"></span></p>
         <h2 id="products-title" class="h2">
-          <span class="sr">Five tools. One quiet look.</span>
+          <span class="sr">Five tools. <em>One quiet look.</em></span>
           <span class="px px-h2" data-pixel="FIVE TOOLS.|ONE QUIET LOOK." aria-hidden="true"></span>
         </h2>
         <div class="feat-grid" data-loop>
@@ -145,7 +156,7 @@
       <div class="wrap">
         <p class="eyebrow" aria-hidden="true"><span class="scan" aria-hidden="true"><i></i><i></i><i></i></span><span class="px px-eye" data-pixel="SHARED"></span></p>
         <h2 id="shared-title" class="h2">
-          <span class="sr">Made the same way.</span>
+          <span class="sr">Made <em>the same way.</em></span>
           <span class="px px-h2" data-pixel="MADE THE|SAME WAY." aria-hidden="true"></span>
         </h2>
         <div class="shared">
@@ -160,7 +171,7 @@
       <div class="wrap close-inner">
         <span class="scan scan-big" aria-hidden="true"><i></i><i></i><i></i></span>
         <h2 id="close-title" class="h2">
-          <span class="sr">Keep a pulse on it.</span>
+          <span class="sr">Keep a pulse <em>on it.</em></span>
           <span class="px px-close" data-pixel="KEEP A PULSE|ON IT." aria-hidden="true"></span>
         </h2>
         <div class="cta-row">

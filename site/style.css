@@ -1,15 +1,33 @@
+/* Type: Bricolage Grotesque (display + text, optical-size and width axes), Instrument Serif (italic accents),
+   Martian Mono (labels, code). All three are Google Fonts under the SIL OFL, self-hosted because the CSP is font-src 'self'. */
 @font-face {
-  font-family: "Schibsted Grotesk";
-  src: url("fonts/SchibstedGrotesk-Variable.woff2") format("woff2");
-  font-weight: 400 900;
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/BricolageGrotesque-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Schibsted Grotesk";
-  src: url("fonts/SchibstedGrotesk-Italic-Variable.woff2") format("woff2");
-  font-weight: 400 900;
+  font-family: "Instrument Serif";
+  src: url("fonts/InstrumentSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
   font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Martian Mono";
+  src: url("fonts/MartianMono-Variable.woff2") format("woff2");
+  font-weight: 100 800;
+  font-stretch: 75% 112%;
+  font-style: normal;
   font-display: swap;
 }
 
@@ -25,8 +43,11 @@
   --line: #303030;
   --on-hover: #ffffff;
 
-  --body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --body: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --mono: "Martian Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --r-pill: 999px;
 
   --wrap: 1180px;
   --gutter: clamp(16px, 4vw, 40px);
@@ -589,3 +610,39 @@ canvas.on-row { cursor: pointer !important; }
 .metal .btn-small { padding-inline: 12px; }
 .metal .btn-ghost, .metal .btn-star { background-color: var(--bg); }
 .metal .btn-ghost:hover, .metal .btn-star:hover { background-color: #161615; }
+
+/* ================================================================ type system (v14)
+   Real type for headings; the 5x7 pixel font stays for the wordmark, eyebrows, keys and live numbers.
+   The heading markup keeps both a visually-hidden .sr span (the real text) and an aria-hidden pixel
+   span, so flipping which one shows is pure CSS and every page follows. */
+body { font-family: var(--body); font-optical-sizing: auto; font-feature-settings: "ss01", "kern"; }
+h1 > .px-hero, h2 > .px-h2, h2 > .px-close, h3 > .px-product { display: none; }
+h1 > .sr, h2 > .sr, h3 > .sr {
+  position: static; width: auto; height: auto; margin: 0; padding: 0; overflow: visible; clip: auto; white-space: normal;
+  display: block; color: var(--on); font-family: var(--display); font-optical-sizing: auto; text-wrap: balance;
+}
+h1 > .sr { font-size: clamp(46px, 8.4vw, 116px); line-height: 0.96; font-weight: 580; font-stretch: 93%; letter-spacing: -0.035em; }
+h2 > .sr { font-size: clamp(36px, 5.6vw, 76px); line-height: 1; font-weight: 580; font-stretch: 93%; letter-spacing: -0.03em; }
+h3 > .sr { font-size: clamp(26px, 2.6vw, 34px); line-height: 1.05; font-weight: 600; font-stretch: 92%; letter-spacing: -0.03em; }
+.feat h3 { margin-bottom: 0; }
+/* the one serif moment: an italic accent inside a heading */
+h1 em, h2 em, h3 em, .lede em {
+  font-family: var(--serif); font-style: italic; font-weight: 400; font-stretch: 100%;
+  letter-spacing: -0.015em; font-size: 1.1em; line-height: 0.9; color: var(--mid);
+}
+h2 { margin-bottom: 0; }
+.h2 { margin-bottom: 44px; }
+.close-inner .h2 > .sr { text-align: center; }
+h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.02em; }
+.metric-list li h3, .shared h3 { font-size: 22px; font-stretch: 94%; }
+b, strong { font-weight: 650; }
+code, .mono { font-family: var(--mono); font-size: 0.8em; font-stretch: 100%; letter-spacing: -0.01em; }
+.lede { font-family: var(--body); font-weight: 400; letter-spacing: -0.01em; }
+.eyebrow { font-family: var(--mono); }
+.nav-links a { font-weight: 500; letter-spacing: -0.005em; }
+.meta, .board-label, .fine { font-family: var(--body); }
+
+/* buttons: pills, like the reference. The radius is a token (--r-pill). */
+.btn { border-radius: var(--r-pill); padding: 0 24px; font-weight: 600; letter-spacing: -0.005em; }
+.btn-small { padding: 0 18px; }
+.count { border-radius: var(--r-pill); padding: 4px 8px; }
