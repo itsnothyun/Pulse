@@ -73,7 +73,9 @@ const start = () => {
   const DAY = 1440, SLOTS = 26, PD = 6, NC = DAY / PD;
   const LON_C = 36, LAT0 = -40, LAT1 = 85, TS = 6, TW = 360 * TS, TH = (LAT1 - LAT0) * TS;
   const DEG = Math.PI / 180, F = 4 / TS; // F keeps the map's noise the size it was at 4 texels a degree
-  const COVER = [0, 0.3, 0.6, 1], RADII = [0, 1.05, 1.95, 2.85];
+  // the frame is ASCII: ten brightness steps, one character each, drawn on a 2x2-cell grid
+  const RAMP = ' .:-=+*#%@', NS = RAMP.length - 1, BLOCK = 2;
+  const COVER = Array.from({ length: NS + 1 }, (_, i) => Math.max(i / NS, 0.0001));
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16 - 0.47);
   const TILT = 30 * DEG, P = [0, Math.cos(TILT), -Math.sin(TILT)], G = [0, Math.sin(TILT), Math.cos(TILT)];
   const SUN_A = 63 * DEG, SUN = [CX + R * Math.cos(SUN_A), CY - R * Math.sin(SUN_A)];
@@ -337,8 +339,8 @@ const start = () => {
         if (req > 0.06) pin = aO[k] >= aT[k] ? I_FLY : I_LAND;
       }
       const peak = Math.max(cr, cg, cb, 1e-4);
-      const level = clamp(floor + (1 - floor) * Math.pow(peak, 0.85) * 0.98);
-      const st = Math.max(0, Math.min(3, Math.round(level * 3 + BAYER[(r & 3) * 4 + (x & 3)])));
+      const level = clamp(floor + (1 - floor) * Math.pow(peak, 0.68) * 0.98);
+      const st = Math.max(0, Math.min(NS, Math.round(level * NS + BAYER[(r & 3) * 4 + (x & 3)] * 0.5)));
       step[k] = st;
       if (pin >= 0 && st) col[k] = pin;
       else {
@@ -349,27 +351,38 @@ const start = () => {
     }
   };
 
-  // each (size, grey) dot drawn once into a sprite sheet; a frame repaints only changed cells
+  // each (character, grey) drawn once into a sprite sheet; a frame repaints only blocks that changed
+  const TILE = CELL * BLOCK, BW = W / BLOCK, BH = H / BLOCK, NB = BW * BH;
   canvas.width = W * CELL; canvas.height = H * CELL;
   const ctx = canvas.getContext('2d');
   const atlas = document.createElement('canvas');
-  atlas.width = CELL * 4; atlas.height = CELL * PAL.length;
+  atlas.width = TILE * (NS + 1); atlas.height = TILE * PAL.length;
   const ac = atlas.getContext('2d');
+  ac.font = `600 ${Math.round(TILE * 1.02)}px Menlo, "SF Mono", Consolas, "DejaVu Sans Mono", monospace`;
+  ac.textAlign = 'center'; ac.textBaseline = 'middle';
   PAL.forEach((c, ci) => {
     ac.fillStyle = c;
-    for (let s = 1; s < 4; s++) { ac.beginPath(); ac.arc(s * CELL + CELL / 2, ci * CELL + CELL / 2, RADII[s], 0, Math.PI * 2); ac.fill(); }
+    for (let s = 1; s <= NS; s++) ac.fillText(RAMP[s], s * TILE + TILE / 2, ci * TILE + TILE / 2 + 0.5);
   });
-  const lastS = new Uint8Array(N).fill(255), lastC = new Uint8Array(N);
+  const lastS = new Uint8Array(NB).fill(255), lastC = new Uint8Array(NB);
   const paint = t => {
     shade(t);
     ctx.fillStyle = PAL[0];
-    for (let k = 0; k < N; k++) {
-      const st = step[k], c = st ? col[k] : 0;
-      if (st === lastS[k] && c === lastC[k]) continue;
-      lastS[k] = st; lastC[k] = c;
-      const x = (k % W) * CELL, y = ((k / W) | 0) * CELL;
-      ctx.fillRect(x, y, CELL, CELL);
-      if (st) ctx.drawImage(atlas, st * CELL, c * CELL, CELL, CELL, x, y, CELL, CELL);
+    for (let by = 0; by < BH; by++) for (let bx = 0; bx < BW; bx++) {
+      let sum = 0, best = 0, bc = 0;
+      for (let dy = 0; dy < BLOCK; dy++) for (let dx = 0; dx < BLOCK; dx++) {
+        const k = (by * BLOCK + dy) * W + bx * BLOCK + dx, v = step[k];
+        sum += v;
+        if (v > best) { best = v; bc = col[k]; }
+      }
+      // brightest cell leads, the block's mean steadies it, so thin lines survive the 2x2 reduction
+      const st = Math.min(NS, Math.round(0.5 * best + 0.5 * sum / (BLOCK * BLOCK))), c = st ? bc : 0;
+      const b = by * BW + bx;
+      if (st === lastS[b] && c === lastC[b]) continue;
+      lastS[b] = st; lastC[b] = c;
+      const x = bx * TILE, y = by * TILE;
+      ctx.fillRect(x, y, TILE, TILE);
+      if (st) ctx.drawImage(atlas, st * TILE, c * TILE, TILE, TILE, x, y, TILE, TILE);
     }
   };
 

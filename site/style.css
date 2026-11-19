@@ -51,16 +51,6 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
-/* faint scanlines over everything, like the widget */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-  background: repeating-linear-gradient(to bottom, rgba(242, 242, 237, 0.018) 0 1px, transparent 1px 3px);
-}
-
 ::selection { background: var(--on); color: var(--bg); }
 :focus-visible { outline: 2px solid var(--on); outline-offset: 3px; border-radius: 2px; }
 html { scrollbar-color: #3a3a38 var(--bg); scrollbar-width: thin; }
