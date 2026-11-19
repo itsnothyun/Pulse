@@ -1,32 +1,16 @@
-/* Type: Bricolage Grotesque (display + text, optical-size and width axes), Instrument Serif (italic accents),
-   Martian Mono (labels, code). All three are Google Fonts under the SIL OFL, self-hosted because the CSP is font-src 'self'. */
+/* Type: Google Sans Flex (text and display, one variable family used across its weight range) and Google Sans Code
+   (labels, code). Both are Google Fonts under the SIL OFL, self-hosted because the CSP is font-src 'self'. */
 @font-face {
-  font-family: "Bricolage Grotesque";
-  src: url("fonts/BricolageGrotesque-Variable.woff2") format("woff2");
-  font-weight: 200 800;
-  font-stretch: 75% 100%;
+  font-family: "Google Sans Flex";
+  src: url("fonts/GoogleSansFlex-Variable.woff2") format("woff2");
+  font-weight: 100 1000;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Instrument Serif";
-  src: url("fonts/InstrumentSerif-Italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Instrument Serif";
-  src: url("fonts/InstrumentSerif-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Martian Mono";
-  src: url("fonts/MartianMono-Variable.woff2") format("woff2");
-  font-weight: 100 800;
-  font-stretch: 75% 112%;
+  font-family: "Google Sans Code";
+  src: url("fonts/GoogleSansCode-Variable.woff2") format("woff2");
+  font-weight: 300 800;
   font-style: normal;
   font-display: swap;
 }
@@ -43,10 +27,9 @@
   --line: #303030;
   --on-hover: #ffffff;
 
-  --body: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
-  --mono: "Martian Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --body: "Google Sans Flex", ui-sans-serif, system-ui, sans-serif;
+  --display: "Google Sans Flex", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Google Sans Code", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --r-pill: 999px;
 
   --wrap: 1180px;
@@ -611,35 +594,33 @@ canvas.on-row { cursor: pointer !important; }
 .metal .btn-ghost, .metal .btn-star { background-color: var(--bg); }
 .metal .btn-ghost:hover, .metal .btn-star:hover { background-color: #161615; }
 
-/* ================================================================ type system (v14)
-   Real type for headings; the 5x7 pixel font stays for the wordmark, eyebrows, keys and live numbers.
-   The heading markup keeps both a visually-hidden .sr span (the real text) and an aria-hidden pixel
-   span, so flipping which one shows is pure CSS and every page follows. */
-body { font-family: var(--body); font-optical-sizing: auto; font-feature-settings: "ss01", "kern"; }
+/* ================================================================ type system (v15)
+   One family, a deliberate weight mix: headings at 600 with the emphasised phrase dropped to 300 in the
+   mid grey, text at 400, labels and buttons at 500-600. Real type for headings; the 5x7 pixel font stays
+   for the wordmark, eyebrows, keys and live numbers. Each heading keeps a visually-hidden .sr span (the
+   real text) and an aria-hidden pixel span, so flipping which one shows is pure CSS and every page follows. */
+body { font-family: var(--body); font-optical-sizing: auto; font-weight: 400; }
 h1 > .px-hero, h2 > .px-h2, h2 > .px-close, h3 > .px-product { display: none; }
 h1 > .sr, h2 > .sr, h3 > .sr {
   position: static; width: auto; height: auto; margin: 0; padding: 0; overflow: visible; clip: auto; white-space: normal;
-  display: block; color: var(--on); font-family: var(--display); font-optical-sizing: auto; text-wrap: balance;
+  display: block; color: var(--on); font-family: var(--display); text-wrap: balance;
 }
-h1 > .sr { font-size: clamp(46px, 8.4vw, 116px); line-height: 0.96; font-weight: 580; font-stretch: 93%; letter-spacing: -0.035em; }
-h2 > .sr { font-size: clamp(36px, 5.6vw, 76px); line-height: 1; font-weight: 580; font-stretch: 93%; letter-spacing: -0.03em; }
-h3 > .sr { font-size: clamp(26px, 2.6vw, 34px); line-height: 1.05; font-weight: 600; font-stretch: 92%; letter-spacing: -0.03em; }
+h1 > .sr { font-size: clamp(42px, 7.4vw, 100px); line-height: 1.02; font-weight: 600; letter-spacing: -0.035em; }
+h2 > .sr { font-size: clamp(34px, 5vw, 68px); line-height: 1.04; font-weight: 600; letter-spacing: -0.03em; }
+h3 > .sr { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; }
 .feat h3 { margin-bottom: 0; }
-/* the one serif moment: an italic accent inside a heading */
-h1 em, h2 em, h3 em, .lede em {
-  font-family: var(--serif); font-style: italic; font-weight: 400; font-stretch: 100%;
-  letter-spacing: -0.015em; font-size: 1.1em; line-height: 0.9; color: var(--mid);
-}
+/* the emphasised phrase: same family, light weight, softer grey */
+h1 em, h2 em, h3 em, .lede em { font-style: normal; font-weight: 300; color: var(--mid); letter-spacing: -0.03em; }
 h2 { margin-bottom: 0; }
 .h2 { margin-bottom: 44px; }
 .close-inner .h2 > .sr { text-align: center; }
-h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.02em; }
-.metric-list li h3, .shared h3 { font-size: 22px; font-stretch: 94%; }
-b, strong { font-weight: 650; }
-code, .mono { font-family: var(--mono); font-size: 0.8em; font-stretch: 100%; letter-spacing: -0.01em; }
-.lede { font-family: var(--body); font-weight: 400; letter-spacing: -0.01em; }
+h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.015em; }
+.metric-list li h3, .shared h3 { font-size: 21px; }
+b, strong { font-weight: 600; }
+code, .mono { font-family: var(--mono); font-size: 0.84em; letter-spacing: 0; }
+.lede { font-family: var(--body); font-weight: 350; letter-spacing: -0.005em; }
 .eyebrow { font-family: var(--mono); }
-.nav-links a { font-weight: 500; letter-spacing: -0.005em; }
+.nav-links a { font-weight: 500; }
 .meta, .board-label, .fine { font-family: var(--body); }
 
 /* buttons: pills, like the reference. The radius is a token (--r-pill). */

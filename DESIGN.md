@@ -29,23 +29,23 @@ typography:
     lineHeight: 1
     letterSpacing: "1 empty column per glyph (6-column advance)"
   lede:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(20px, 2.1vw, 24px)"
     fontWeight: 400
     lineHeight: 1.45
   title:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex, ui-sans-serif, system-ui, sans-serif"
     fontSize: "18px"
     fontWeight: 600
     lineHeight: 1.35
     letterSpacing: "-0.005em"
   body:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex, ui-sans-serif, system-ui, sans-serif"
     fontSize: "18px"
     fontWeight: 400
     lineHeight: 1.6
   label:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex, ui-sans-serif, system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.4
@@ -79,7 +79,7 @@ components:
     rounded: "{rounded.button}"
     padding: "0 22px"
     height: "52px"
-    typography: "600 15px/1 Bricolage Grotesque"
+    typography: "600 15px/1 Google Sans Flex"
   button-primary-hover:
     backgroundColor: "#ffffff"
     textColor: "{colors.ground}"
@@ -187,7 +187,7 @@ A strictly achromatic, faintly warm palette: every value is a step on one grey l
 ## Typography
 
 **Display Font:** the Pulse 5×7 glyph table (`site/glyphs.js`, generated from `macos/Pulse.swift`), rendered as crisp SVG rects on the site and as filled squares on canvas/SwiftUI/WPF.
-**Body and Display Font:** Bricolage Grotesque (variable, optical-size and width axes, self-hosted woff2, ui-sans-serif fallback). **Accent:** Instrument Serif italic, used only for the emphasised phrase inside a heading. **Mono:** Martian Mono for labels, captions and code. All three are Google Fonts (SIL OFL), self-hosted because the CSP is font-src 'self'. The 5x7 pixel font stays for the wordmark, eyebrows, keys and live numbers.
+**Body and Display Font:** Google Sans Flex (variable, weights 100 to 1000, self-hosted woff2, ui-sans-serif fallback), used as one family with a deliberate weight mix: headings 600, the emphasised phrase inside a heading 300 in mid grey, text 400, labels and buttons 500 to 600. **Mono:** Google Sans Code for labels, captions and code. Both are Google Fonts (SIL OFL), self-hosted because the CSP is font-src 'self'. The 5x7 pixel font stays for the wordmark, eyebrows, keys and live numbers.
 **Label/Mono Font:** system monospace stack, for code, commands, counts and step numbers.
 
 **Character:** a hand-made bitmap face doing all the shouting, set against a calm, slightly condensed grotesk that reads like documentation.
@@ -314,7 +314,7 @@ The product itself, drawn identically in SwiftUI, WPF and canvas.
 - **Do** draw every display word and every data mark from the 5×7 glyph table and square cells; keep the 6-column advance and 3-dot line gap.
 - **Do** pair each pixel heading with a visually hidden real-text twin and mark the pixels `aria-hidden`.
 - **Do** express state through brightness steps (on, mid, dim, off) and the blink-to-off for hot.
-- **Do** keep real text in Bricolage Grotesque at Steel Grey for body and Caption Grey for small text; reserve Phosphor White for headings, links, emphasis and lit pixels.
+- **Do** keep real text in Google Sans Flex at Steel Grey for body and Caption Grey for small text; reserve Phosphor White for headings, links, emphasis and lit pixels.
 - **Do** lay faint 3px scanlines over dark surfaces and use dotted rules between widget groups.
 - **Do** honour reduced motion everywhere: smooth scroll off, no headline assembly, no caret blink, widget loops frozen (scanner parked, pip held at 85%, no sweep).
 - **Do** keep focus visible as a 2px Phosphor White outline at 3px offset, hit targets at 40px or more (44px for nav links and phone tabs), and keyboard paths for tabs (arrows) and menus (arrows, Escape).
@@ -330,4 +330,4 @@ The product itself, drawn identically in SwiftUI, WPF and canvas.
 
 ## Ecosystem front page (`site/index.html`, `site/home.css`)
 
-The front page uses this system as it stands: the desk hero (notch demo, centred stack, orbit ground), real-type headings, Bricolage Grotesque with Instrument Serif accents, pill buttons (new token `--r-pill`) and a strictly monochrome palette. Sections sit on open ground. Containers are for product features only, and each holds looping SVG art that pauses off screen and stops for reduced motion.
+The front page uses this system as it stands: the desk hero (notch demo, centred stack, orbit ground), real-type headings, Google Sans Flex, pill buttons (new token `--r-pill`) and a strictly monochrome palette. Sections sit on open ground. Containers are for product features only, and each holds looping SVG art that pauses off screen and stops for reduced motion.

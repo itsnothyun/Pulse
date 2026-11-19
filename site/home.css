@@ -116,12 +116,12 @@
 }
 .hero-icon { border-radius: 16px; box-shadow: 0 0 0 1px rgba(242, 242, 237, 0.14), 0 18px 40px -14px rgba(0, 0, 0, 0.9); margin-bottom: clamp(24px, 3.4vw, 36px); }
 .hero-title { max-width: min(100%, 860px); }
-.hero-title > .sr { font-size: clamp(40px, 7vw, 96px); font-weight: 560; font-stretch: 96%; letter-spacing: -0.035em; }
+.hero-title > .sr { font-size: clamp(40px, 6.6vw, 92px); font-weight: 600; letter-spacing: -0.04em; }
 .hero-center .lede { max-width: 40ch; margin-top: clamp(20px, 2.6vw, 30px); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.45; }
 .hero-center .cta-row { margin-top: clamp(28px, 3.6vw, 40px); justify-content: center; }
 .btn-lg { --h: 56px; padding: 0 28px; font-size: 16px; }
 .hero-center .btn-primary { box-shadow: 0 0 0 1px rgba(242, 242, 237, 0.4), 0 12px 32px -10px rgba(242, 242, 237, 0.3); }
-.caption { margin-top: 18px; font: 500 12px/1.4 var(--mono); letter-spacing: 0.02em; color: var(--text-dim); }
+.caption { margin-top: 18px; font: 400 12px/1.4 var(--mono); letter-spacing: 0; color: var(--text-dim); }
 @media (max-width: 520px) { .hero-center .cta-row { flex-direction: column; align-items: stretch; width: 100%; } .hero-center .btn { justify-content: center; } }
 
 /* ---- the notch ---- */
